@@ -1,9 +1,14 @@
+#include <linux/cdev.h>
+#include <linux/fs.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/pci.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Nerdbuero Staff");
+
+// Function prototypes
+static long mcs9815_ioctl(struct file*, unsigned int, unsigned long);
 
 static const struct pci_device_id id_table[] =
 {
@@ -25,11 +30,26 @@ static struct pci_driver mcs9815_pci_driver =
 	.id_table = id_table
 };
 
+struct file_operations fops =
+{
+	.owner = THIS_MODULE,
+	.unlocked_ioctl = mcs9815_ioctl
+};
+
+// We allow access to the parport via ioctl'ing the /dev/mcs9815 device.
+// This is only for testing purposes as this might be dangerous if invalid 
+// data is sent to the registers. Ye be warned!
+static long mcs9815_ioctl(struct file* file, unsigned int cmd, unsigned long arg)
+{
+	return -ENOTTY;
+}
+
 static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 {
 	unsigned int n, res_start, res_end, res_flags;
+	struct parport_operations *ops;
 
-	if(pci_enable_device(dev) < 0) // Rückgabewert korrekt?
+	if(unlikely(pci_enable_device(dev) < 0)) // Error codes < 0?
 	{
 		printk("pci_enable_device failed!");
 		return -1;
@@ -45,10 +65,17 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	}
 
 	// Now it's time to register this module as parport driver, isn't it?
+	/*ops = kmalloc(sizeof(struct parport_operations), GFP_KERNEL);
+	if(ops == NULL)
+		goto err0;
 	
+	parport_register_port(PARPORT0_BASE, irq, dma, ops);*/
 
 	printk("PCI probe finished.\n");
 	return 0;
+	
+err0:
+	pci_disable_device(dev);	
 }
 
 static void pci_remove(struct pci_dev* dev)
