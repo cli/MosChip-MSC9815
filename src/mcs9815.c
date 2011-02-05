@@ -36,13 +36,16 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	}
 	
 	// Probe I/O areas
-	for(n = 0; n < 4; n++)
+	for(n = 0; n < 6; n++)
 	{
 		res_start = pci_resource_start(dev, n);
 		res_end = pci_resource_end(dev, n);
 		res_flags = pci_resource_flags(dev, n);
 		printk("Bar %u: Start %x End %x Flags %x\n", n, res_start, res_end, res_flags);
 	}
+
+	// Now it's time to register this module as parport driver, isn't it?
+	
 
 	printk("PCI probe finished.\n");
 	return 0;

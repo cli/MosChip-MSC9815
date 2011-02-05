@@ -1,0 +1,6 @@
+src/.tmp*
+src/.mcs9815*
+src/.*\.*o$
+src/Module.symvers
+src/modules.order
+src/mcs9815.mod*
