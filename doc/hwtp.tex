@@ -75,18 +75,21 @@ dafür im Linux-Kernel sehr gut.
 Das \verb|parport| Subsystem besteht im Wesentlichen aus zwei Teilbereichen, einem abstrakteren Highlevel-System, das
 die IEEE 1284 Kommunikation beherrscht und einem Lowlevel-System, was den Hardwarezugriff auf die einzelnen Ports
 kontrolliert. Auf einem PC stellt das Modul \verb|parport_pc| den architekturspezifischen Teil bereit, das Modul parport 
-den generischen Teil.
+den generischen Teil (vgl. \cite{net:1}).
 
 Der hardwarespezifische Treiber registriert einen \emph{Port}\footnote{Port ist hier die logische Parallelschnittstelle, nicht zu verwechseln
 mit dem I/O-Port (z.B. 0x378), der im PC für den Zugriff auf die Parallelporthardware verwendet werden kann} 
 im \verb|parport| Subsystem. 
 Dieses benachrichtigt alle registrierten High-Level-Treiber (z.B. \verb|lp| für Drucker) über den neuen Port. Der Lowlevel-Treiber stellt
-Funktionen für den Zugriff auf Basisfunktionen des Ports bereit.
+Funktionen für den Zugriff auf Basisfunktionen des Ports bereit (vgl. \cite{net:1}).
 
 Aufgabe dieser Hausarbeit ist es, einen Lowlevel-Treiber für einen speziellen Parallelport-Controller zu schreiben. Diese 
 Funktionalität ist normalerweise im architekturspezifischen Modul \verb|parport_pc| integriert.
 
 \subsection{Strukturen}
+
+Die Dokumentation der Strukturen wurde den Quellen des Linux-Kernels entnommen 
+(vgl. \cite{net:2}, Documentation/parport-lowlevel.txt).
 
 \subsubsection{parport\_driver}
 
@@ -135,6 +138,10 @@ struct parport_device_info {
 
 \subsubsection{parport\_operations}
 
+Wie auch die Struktur \verb|file_operations| bei einem Dateisystemtreiber enthält die 
+Struktur \verb|parport_operations| u.a. Funktionszeiger auf die vom Treiber unterstützten
+Parallelportfunktionen.
+
 \begin{verbatim}
 struct parport_operations {
     /* IBM PC-style virtual registers. */
@@ -176,13 +183,184 @@ struct parport_operations {
     struct module *owner;
 };\end{verbatim} 
 
-\subsection{SPP Port Funktionen}
+Die einzelnen Funktionen werden in den folgenden Abschnitten erläutert.
 
-\subsection{EPP Port Funktionen}
+\subsection{Funktionen}
 
-\subsection{ECP und andere Portfunktionen}
+Die Dokumentation der Funktionen wurde den Quellen des Linux-Kernels entnommen 
+(vgl. \cite{net:2}, Documentation/parport-lowlevel.txt).
+
+\subsubsection{SPP Port Funktionen}
+
+\paragraph{write\_data}
+
+\paragraph{read\_data}
+
+\paragraph{read\_status}
+
+\paragraph{read\_control}
+
+\paragraph{write\_control}
+
+\paragraph{frob\_control}
+
+\paragraph{enable\_irq}
+
+\paragraph{disable\_irq}
+
+\paragraph{data\_forward}
+
+\paragraph{data\_reverse}
+
+\subsubsection{EPP Port Funktionen}
+
+\paragraph{epp\_write\_data}
+
+\paragraph{epp\_read\_data}
+
+\paragraph{epp\_write\_addr}
+
+\paragraph{epp\_read\_addr}
+
+\subsubsection{ECP und andere Portfunktionen}
+
+\paragraph{ecp\_write\_data}
+
+\paragraph{ecp\_read\_data}
+
+\paragraph{ecp\_write\_addr}
+
+\paragraph{nibble\_read\_data}
+
+\paragraph{byte\_read\_data}
+
+\paragraph{compat\_write\_data}
 
 \subsection{Globale Funktionen den parport Subsystems}
+
+Die globalen Funktionen des parport Subsystems können sowohl von den Lowlevel- als auch
+Highlevel-Treibern verwendet werden.
+
+\paragraph{parport\_register\_driver}
+
+\begin{verbatim}
+int parport_register_driver (struct parport_driver *driver);
+\end{verbatim}
+
+Damit ein Treiber über neue Parallelschnittstellen des Systems informiert wird, muss er
+sich mit dieser Methode im Kernel registrieren. Nach der Registrierung wird der Treiber
+sofort über alle bereits detektierten Parallelschnittstellen informiert (attach Funktion)
+und über jede, die in Zukunft von einem Lowlevel-Treiber bereitgestellt oder entfernt wird.
+
+\paragraph{parport\_unregister\_driver}
+
+\begin{verbatim}
+void parport_unregister_driver (struct parport_driver *driver);
+\end{verbatim}
+
+Nach Aufruf dieser Funktion wird der angegebene Treiber nicht mehr über die Registrierung
+und Deregistrierung von Parports informiert. Die bereits registrierten Geräte werden \emph{nicht}
+automatisch deregistriert.
+
+% \paragraph{parport\_enumerate}
+% Lassen wir weg, da die Funktion deprecated ist.
+
+\paragraph{parport\_register\_device}
+
+\begin{verbatim}
+typedef int (*preempt_func) (void *handle);
+typedef void (*wakeup_func) (void *handle);
+typedef int (*irq_func) (int irq, void *handle, struct pt_regs *);
+
+struct pardevice *parport_register_device(struct parport *port,
+                                          const char *name,
+                                          preempt_func preempt,
+                                          wakeup_func wakeup,
+                                          irq_func irq,
+                                          int flags,
+                                          void *handle);
+\end{verbatim}
+
+Diese Funktion wird verwendet um einen Gerätetreiber, der den angegebenen Parallelport verwenden will,
+im parport System zu registrieren. Der gewählte Gerätename ('name') muss während der Lebenszeit des
+Geräts eindeutig sein. 
+Die über preempt spezifizierte Funktion wird aufgerufen, wenn ein anderer Treiber den Port verwenden
+möchte (es können mehrere Geräte eine Parallelschnittstelle verwenden).
+Die wakeup Funktion wird aufgerufen, sobald der Parallelport von einem anderen Treiber wieder
+freigegeben wurde. Die Funktion irq wird aufgerufen, wenn am angegebenen Parallelport ein Interrupt
+auftritt.
+
+\paragraph{parport\_unregister\_device}
+
+\begin{verbatim}
+void parport_unregister_device (struct pardevice *dev)
+\end{verbatim}
+
+Deregistriert das angegebene Gerät ('dev').
+
+\paragraph{parport\_claim und parport\_claim\_or\_block}
+
+\begin{verbatim}
+int parport_claim (struct pardevice *dev)
+int parport_claim_or_block (struct pardevice *dev)
+\end{verbatim}
+
+\paragraph{parport\_release}
+
+\begin{verbatim}
+void parport_release (struct pardevice *dev)
+\end{verbatim}
+
+\paragraph{parport\_yield und parport\_yield\_blocking}
+
+\begin{verbatim}
+int parport_yield (struct pardevice *dev)
+int parport_yield_blocking (struct pardevice *dev);
+\end{verbatim}
+
+\paragraph{parport\_wait\_peripheral}
+\begin{verbatim}
+int parport_wait_peripheral (struct parport *port,
+			     unsigned char mask,
+			     unsigned char val);
+\end{verbatim}
+
+
+\paragraph{parport\_poll\_peripheral}
+
+\begin{verbatim}
+int parport_poll_peripheral (struct parport *port,
+			     unsigned char mask,
+			     unsigned char val,
+			     int usec);
+\end{verbatim}
+
+
+\paragraph{parport\_wait\_event}
+\begin{verbatim}
+int parport_wait_event (struct parport *port, signed long timeout)
+\end{verbatim}
+
+
+\paragraph{parport\_negotiate}
+
+\paragraph{parport\_read}
+
+\paragraph{parport\_write}
+
+\paragraph{parport\_open}
+
+\paragraph{parport\_close}
+
+\paragraph{parport\_device\_id}
+
+\paragraph{parport\_device\_coords}
+
+\paragraph{parport\_find\_class}
+
+\paragraph{parport\_find\_device}
+
+\paragraph{parport\_set\_timeout}
 
 \section{Der MosChip MCS9815 Controller}
 
