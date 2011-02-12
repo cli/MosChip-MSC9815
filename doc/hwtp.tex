@@ -1,4 +1,4 @@
-\documentclass[a4paper]{article}
+\documentclass[a4paper,11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T3,T1]{fontenc}
 \usepackage[english,ngerman]{babel}
@@ -52,7 +52,7 @@
 
 \title{Hardwarenahe System- und Treiberprogrammierung}
 %\subtitle{Parallelportcontroller MosChip MCS9815}
-\author{\parbox{7cm}{B.Sc. Rolf Behrens\\ Dipl. Inf. (FH) Christian Lins}}
+\author{\parbox{7cm}{Rolf Behrens und Christian Lins}}
 
 \begin{document}
 \sloppy
@@ -62,14 +62,39 @@
 
 \section{Einleitung}
 
-Dieses Dokument beschreibt die Einrichtung und Installation der ArcGIS Software speziell für das 
-Projekt OSINOS sowie allgemein die Erstellung eines Geoprozessors.
+Hier sollten ein paar einleitende Worte stehen...
 
 Bla bla
 
 \section{Parallelportschnittstelle}
 
+\section{Parport-Treiber in Linux}
 
+Da die Parallelportschnittstelle aus der Steinzeit der PC-Entwicklung stammt, ist die Unterstützung
+dafür im Linux-Kernel sehr gut. 
+Das \verb|parport| Subsystem besteht im Wesentlichen aus zwei Teilbereichen, einem abstrakteren Highlevel-System, das
+die IEEE 1284 Kommunikation beherrscht und einem Lowlevel-System, was den Hardwarezugriff auf die einzelnen Ports
+kontrolliert. Auf einem PC stellt das Modul \verb|parport_pc| den architekturspezifischen Teil bereit, das Modul parport 
+den generischen Teil.
+
+Der hardwarespezifische Treiber registriert einen \emph{Port}\footnote{Port ist hier die logische Parallelschnittstelle, nicht zu verwechseln
+mit dem I/O-Port (z.B. 0x378), der im PC für den Zugriff auf die Parallelporthardware verwendet werden kann} 
+im \verb|parport| Subsystem. 
+Dieses benachrichtigt alle registrierten High-Level-Treiber (z.B. \verb|lp| für Drucker) über den neuen Port. Der Lowlevel-Treiber stellt
+Funktionen für den Zugriff auf Basisfunktionen des Ports bereit.
+
+Aufgabe dieser Hausarbeit ist es, einen Lowlevel-Treiber für einen speziellen Parallelport-Controller zu schreiben. Diese 
+Funktionalität ist normalerweise im architekturspezifischen Modul \verb|parport_pc| integriert.
+
+\subsection{Strukturen}
+
+\subsection{SPP Port Funktionen}
+
+\subsection{EPP Port Funktionen}
+
+\subsection{ECP und andere Portfunktionen}
+
+\subsection{Globale Funktionen den parport Subsystems}
 
 \bibliography{literatur}
 
