@@ -88,6 +88,94 @@ Funktionalität ist normalerweise im architekturspezifischen Modul \verb|parport
 
 \subsection{Strukturen}
 
+\subsubsection{parport\_driver}
+
+Die Struktur \verb|parport_driver| repräsentiert einen Highlevel-Parport-Treiber.
+
+\begin{verbatim}
+struct parport_driver {
+    const char *name;
+    void (*attach) (struct parport *);
+    void (*detach) (struct parport *);
+    struct parport_driver *next;
+};\end{verbatim}
+
+Die Funktionzeiger \verb|attach| und \verb|detach| muss der Treiber zur Verfügung stellen, wenn er benachrichtigt
+werden will, sobald ein neuer Parallelport im System auftaucht oder einer entfernt wird (wenn z.B. der
+passende Lowlevel-Treiber entfernt wird).
+
+\subsubsection{parport}
+
+Die Struktur \verb|parport| repräsentiert eine logische Parallelschnittstelle.
+
+\begin{verbatim}
+struct parport {
+    struct parport *next; /* next parport in list */
+    const char *name;     /* port's name */
+    unsigned int modes;   /* bitfield of hardware modes */
+    struct parport_device_info probe_info;
+                          /* IEEE1284 info */
+    int number;           /* parport index */
+    struct parport_operations *ops;
+};\end{verbatim}
+
+Dem Bitfeld modes kann man entnehmen, welche Modi der Schnittstelle unterstützt werden (SPP, EPP).
+
+\subsubsection{parport\_device\_info}
+
+\begin{verbatim}
+struct parport_device_info {
+    parport_device_class class;
+    const char *class_name;
+    const char *mfr;
+    const char *model;
+    const char *cmdset;
+    const char *description;
+};\end{verbatim} 
+
+\subsubsection{parport\_operations}
+
+\begin{verbatim}
+struct parport_operations {
+    /* IBM PC-style virtual registers. */
+    void (*write_data)(struct parport *, unsigned char);
+    unsigned char (*read_data)(struct parport *);
+
+    void (*write_control)(struct parport *, unsigned char);
+    unsigned char (*read_control)(struct parport *);
+    unsigned char (*frob_control)(struct parport *, unsigned char mask, unsigned char val);
+
+    unsigned char (*read_status)(struct parport *);
+
+    /* IRQs. */
+    void (*enable_irq)(struct parport *);
+    void (*disable_irq)(struct parport *);
+
+    /* Data direction. */
+    void (*data_forward) (struct parport *);
+    void (*data_reverse) (struct parport *);
+
+    /* For core parport code. */
+    void (*init_state)(struct pardevice *, struct parport_state *);
+    void (*save_state)(struct parport *, struct parport_state *);
+    void (*restore_state)(struct parport *, struct parport_state *);
+
+    /* Block read/write */
+    size_t (*epp_write_data) (struct parport *port, const void *buf, size_t len, int flags);
+    size_t (*epp_read_data) (struct parport *port, void *buf, size_t len, int flags);
+    size_t (*epp_write_addr) (struct parport *port, const void *buf, size_t len, int flags);
+    size_t (*epp_read_addr) (struct parport *port, void *buf, size_t len, int flags);
+
+    size_t (*ecp_write_data) (struct parport *port, const void *buf, size_t len, int flags);
+    size_t (*ecp_read_data) (struct parport *port, void *buf, size_t len, int flags);
+    size_t (*ecp_write_addr) (struct parport *port, const void *buf, size_t len, int flags);
+
+    size_t (*compat_write_data) (struct parport *port, const void *buf, size_t len, int flags);
+    size_t (*nibble_read_data) (struct parport *port, void *buf, size_t len, int flags);
+    size_t (*byte_read_data) (struct parport *port, void *buf, size_t len, int flags);
+    struct module *owner;
+};\end{verbatim} 
+
 \subsection{SPP Port Funktionen}
 
 \subsection{EPP Port Funktionen}
@@ -95,6 +183,8 @@ Funktionalität ist normalerweise im architekturspezifischen Modul \verb|parport
 \subsection{ECP und andere Portfunktionen}
 
 \subsection{Globale Funktionen den parport Subsystems}
+
+\section{Der MosChip MCS9815 Controller}
 
 \bibliography{literatur}
 
