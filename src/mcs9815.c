@@ -36,6 +36,11 @@ struct file_operations fops =
 	.unlocked_ioctl = mcs9815_ioctl
 };
 
+struct parport_operations ppops =
+{
+	
+};
+
 // We allow access to the parport via ioctl'ing the /dev/mcs9815 device.
 // This is only for testing purposes as this might be dangerous if invalid 
 // data is sent to the registers. Ye be warned!
