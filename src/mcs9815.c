@@ -2,6 +2,7 @@
 #include <linux/fs.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
+#include <linux/parport.h>
 #include <linux/pci.h>
 
 MODULE_LICENSE("GPL");
@@ -36,10 +37,12 @@ struct file_operations fops =
 	.unlocked_ioctl = mcs9815_ioctl
 };
 
-struct parport_operations ppops =
+struct parport_operations ops =
 {
 	
 };
+
+static struct parport* port0 = NULL;
 
 // We allow access to the parport via ioctl'ing the /dev/mcs9815 device.
 // This is only for testing purposes as this might be dangerous if invalid 
@@ -70,21 +73,41 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	}
 
 	// Now it's time to register this module as parport driver, isn't it?
-	/*ops = kmalloc(sizeof(struct parport_operations), GFP_KERNEL);
+	ops = kmalloc(sizeof(struct parport_operations), GFP_KERNEL);
 	if(ops == NULL)
+	{
 		goto err0;
+	}
 	
-	parport_register_port(PARPORT0_BASE, irq, dma, ops);*/
+	// We can adjust the base, irq and dma parameter later in the
+	// parport struct
+	port0 = parport_register_port(0, 0, 0, ops);
+	if(port0 == NULL)
+	{
+		printk("Not enough memory to allocate parport structure!\n");
+		goto err1;
+	}
+	
+	// We have successfully registered our parport, now it's time to
+	// announce it to the system and device drivers
+	parport_announce_port(port0);
 
 	printk("PCI probe finished.\n");
 	return 0;
-	
+
+err1:
+	kfree(ops);
+
 err0:
-	pci_disable_device(dev);	
+	pci_disable_device(dev);
+	return -1;
 }
 
 static void pci_remove(struct pci_dev* dev)
-{	
+{
+	// Remove parallelport from the parport subsystem
+	parport_remove_port(port0);
+	
 	// Disable PCI device
 	pci_disable_device(dev);
 }
