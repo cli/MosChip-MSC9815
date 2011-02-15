@@ -14,6 +14,7 @@
 \usepackage{hhline}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{tabularx}
 \hypersetup{pdftex, colorlinks=true, linkcolor=blue, citecolor=blue, filecolor=blue, urlcolor=blue, pdftitle=, pdfauthor=, pdfsubject=, pdfkeywords=}
 % Text styles
 \newcommand\textstyleSourceText[1]{\texttt{#1}}
@@ -80,12 +81,76 @@ Moderne PCs und Notebooks verzichten heutzutage bereits oft auf die parallele Sc
 
 \subsection{Eingesetzte Hardware}  
 
-Als Hardwareziel kommt eine PCI-Karte der Firma Exsys Inc (http://www.exsys.com) zum Einsatz, auf der ein Chip der Firma Moschip (http://www.moschip.com/) zum Einsatz kommt. Der dort verwendete Mikrocontroller stellt einen MCS9815-Chip dar, der die PCI zu LPT-Kommunikation übernimmt. Zwar findet sich im Linux-Kernel bereits ein Treiber für diesen Mikrokontroller, aufgrund geringer Projekteressourcen fehlt es jedoch an weiteren Alternativen. Da diese Projektarbeit eher dem lehrhaften Charakter einer studentischen Arbeit entspricht und die PCI-Karte den Projektteilnehmern bereits vorliegt, stellt die Entwicklung eines zusätzlichen Treibers für diese Karte nicht nur eine gute Übung dar, sondern ist auch gleichzeitig eine Herausforderung eine tatsächlich existierende Hardware unter dem Betriebssystem Linux zum Laufen zu bringen.  
+Als Hardwareziel kommt eine PCI-Karte der Firma Exsys Inc (http://www.exsys.com) zum Einsatz, auf der ein Chip der Firma Moschip (http://www.moschip.com/) zum Einsatz kommt. Der dort verwendete Mikrocontroller stellt einen MCS9815-Chip dar, der die PCI zu LPT-Kommunikation übernimmt. Zwar findet sich im Linux-Kernel bereits ein Treiber für diesen Mikrokontroller, aufgrund geringer Projekteressourcen fehlt es jedoch an weiteren Alternativen. Da diese Projektarbeit eher dem lehrhaften Charakter einer studentischen Arbeit entspricht und die PCI-Karte den Projektteilnehmern bereits vorliegt, stellt die Entwicklung eines zusätzlichen Treibers für diese Karte nicht nur eine gute Übung dar, sondern ist auch gleichzeitig eine Herausforderung eine tatsächlich existierende Hardware unter dem Betriebssystem Linux zum Laufen zu bringen. Die Spezifikation dieses Mikrokontrollers hat die Firma Moschip offen gelegt, wodurch die Implementierung eines Treibers im Rahmen einer Projektarbeit ermöglicht wird.    
 
-
-LALALALAL
 
 \section{Parallelportschnittstelle}
+
+Die Parallelportschnittstelle ist wesentlich durch den IEEE 1284-Standard geprägt und definiert drei mögliche Steckertypen. Auf PC-Seite findet sich ein 25-poliger D-SUB.Stecker, der 1981 von IBM im PC eingeführt wurde (\textbf{Typ A}). Die 36-polige Centronics-Schnittstelle stellt den Stecker vom \textbf{Typ B} dar. Als Mini-Centronics werden Stecker vom \textbf{Typ C} bezeichnet, die ebenfalls über 36 Pole verfügen, aber deutlich kompakter daherkommen als übliche Centronics-Stecker. 
+
+\begin{figure}[h]
+ \centering
+ \includegraphics{./pics/ieee1284_types.jpg}
+	\caption{Alle IEEE 1284-Steckertypen im Vergleich} 	
+\end{figure}
+
+
+Üblicherweise wurden bei der häufig vorkommenden Verbindung zwischen PC und Drucker Kabel vom Typ AB eingesetzt. Dabei muss ein Mapping vom 25-poligen Typ A-Anschluss zum 36-poligen Typ-B-Anschluss vorgenommen werden (siehe Abbildung).  
+
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[scale=0.7]{./pics/ieee1284_pinbelegungAB.png}
+	\caption{Pinbelegung und -Verdrahtung bei üblichen Druckerkabeln} 	
+\end{figure} 
+
+ 
+ Die folgende Tabelle beschreibt die  Belegung und Bedeutung der einzeln Pins bei einem üblichen Druckerkabel. 
+ \\ \\
+ \begin{tabular}{|p{20mm}|p{20mm}|c|c|c|c|}
+  \hline
+	Pin (SUB-D-Type 25) & Pin (Centronics) & SPP Signal & Richtung Out & Register & Hardware\\ \hline
+	1 & 1	& 	Strobe					& 	Out		&	Control	&	Ja	\\ \hline
+	2 & 2	&	Data 0					&	Out		& 	Data		&     \\ \hline
+	3 &	3	&	Data 1				&	Out		&	Data		&     \\ \hline
+	4 &	4	&	Data 2				&	Out		&	Data		&     \\ \hline
+	5 &	5	&	Data 3				&	Out		&	Data		&     \\ \hline
+	6 &	6	&	Data 4				&	Out		&	Data		&     \\ \hline
+	7 &	7	&	Data 5				&	Out		&	Data		&     \\ \hline
+	8 &	8	&	Data 6				&	Out		&	Data		&     \\ \hline
+	9 &	9	&	Data 7				&	Out		&	Data		&     \\ \hline
+	10 & 10	&	Ack					&	In		&	Status	&	    \\ \hline
+	11 & 11	&	Busy					&	In		&	Status	&	Ja  \\ \hline
+	12 & 12	&	Paper-Out/Paper-End	&	In		&	Status	&	    \\ \hline
+	13 & 13	&	Select				&	In		&	Status	&	    \\ \hline
+	14 & 14	&	Auto-Linefeed			&	Out		&	Control	&	Ja  \\ \hline
+	15 & 32	&	Error					&	In		&	Status	&	    \\ \hline
+	16 & 31	&	Reset				&	Out		&	Control	&	    \\ \hline
+	17 & 36	&	Select-Printer/Select-In	&	Out		&	Control	&	Ja  \\ \hline
+	18 - 25	&	19-30				&	Ground	&	Gnd	&	&             \\ \hline
+ \end{tabular}
+
+
+Um die einzelnen Pins mit Signalen zu belegen, sind drei Speicherbereiche (Ports) für die Behandlung der LPT-Schnittstelle im Rechner vorgesehen.  \\\\
+ \begin{tabular}{|c|c|c|c|}
+ \hline
+\multicolumn{3}{|l|}{Portadresse}	&	Funktion\\  \hline 
+278	&	378	&	3BC	&	Datenport \\  \hline 
+279	&	379	&	3BD	&	Statusport \\  \hline 
+27A	&	37A	&	3BE	&	Steuerport \\  \hline 
+ \end{tabular} 
+ 
+In der Regel werden die Bereiche 278-27A und 378-37A verwendet. Der \textbf{Datenport} ist ein 8-Bit-Ausgagsport, der den Datenleitungen der parallelen Schnittstelle entspricht.  Der \textbf{Steuerport} setzt sich aus  Strobe, Auto-Feed, Reset, Select printer, IRC7 enable und Direction zusammen. 
+ \begin{tabular}{|c|c|c|c|}
+  \hline
+Bit	&	Funktion		&	Pegel  \\ \hline
+0	&	Strobe		&	0 \\ \hline
+1	&	Auto-Feed		&	1\\ \hline
+2	&	Reset		&	0\\ \hline
+3	&	Select printer	&	1\\ \hline
+4	&	IRQ7 enable	&	1\\ \hline
+5	&	Direction	&	1\\ \hline
+ \end{tabular} 
 
 \section{Parport-Treiber in Linux}
 
