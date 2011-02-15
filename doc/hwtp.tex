@@ -13,6 +13,7 @@
 \usepackage{array}
 \usepackage{hhline}
 \usepackage{hyperref}
+\usepackage{graphicx}
 \hypersetup{pdftex, colorlinks=true, linkcolor=blue, citecolor=blue, filecolor=blue, urlcolor=blue, pdftitle=, pdfauthor=, pdfsubject=, pdfkeywords=}
 % Text styles
 \newcommand\textstyleSourceText[1]{\texttt{#1}}
@@ -80,7 +81,7 @@ den generischen Teil (vgl. \cite{net:1}).
 Der hardwarespezifische Treiber registriert einen \emph{Port}\footnote{Port ist hier die logische Parallelschnittstelle, nicht zu verwechseln
 mit dem I/O-Port (z.B. 0x378), der im PC für den Zugriff auf die Parallelporthardware verwendet werden kann} 
 im \verb|parport| Subsystem. 
-Dieses benachrichtigt alle registrierten High-Level-Treiber (z.B. \verb|lp| für Drucker) über den neuen Port. Der Lowlevel-Treiber stellt
+Dieses benachrichtigt alle registrierten Highlevel-Treiber (z.B. der Gerätetreiber \verb|lp| für Drucker) über den neuen Port. Der Lowlevel-Treiber stellt
 Funktionen für den Zugriff auf Basisfunktionen des Ports bereit (vgl. \cite{net:1}).
 
 Aufgabe dieser Hausarbeit ist es, einen Lowlevel-Treiber für einen speziellen Parallelport-Controller zu schreiben. Diese 
@@ -188,29 +189,104 @@ Die einzelnen Funktionen werden in den folgenden Abschnitten erläutert.
 \subsection{Funktionen}
 
 Die Dokumentation der Funktionen wurde den Quellen des Linux-Kernels entnommen 
-(vgl. \cite{net:2}, Documentation/parport-lowlevel.txt).
+(vgl. \cite{net:2}, Documentation/parport-lowlevel.txt). Die meisten der angegebenen Funktionen
+sollte ein Lowlevel-Treiber bereitstellen.
 
 \subsubsection{SPP Port Funktionen}
 
 \paragraph{write\_data}
 
+\begin{verbatim}
+void (*write_data) (struct parport *port, unsigned char d);
+\end{verbatim}
+
+Schreibt d in das Datenregister des angegebenen Ports.
+
 \paragraph{read\_data}
+
+\begin{verbatim}
+unsigned char (*read_data) (struct parport *port);
+\end{verbatim}
+
+Liest das Datenregister des angegebenen Ports und gibt den Inhalt zurück.
 
 \paragraph{read\_status}
 
+\begin{verbatim}
+unsigned char (*read_status) (struct parport *port);
+\end{verbatim}
+
+Liest das Statusregister des angegebenen Ports und gibt den Inhalt zurück.
+
 \paragraph{read\_control}
+
+\begin{verbatim}
+unsigned char (*read_control) (struct parport *port);
+\end{verbatim}
+
+Gibt den Wert zurück, der zuletzt in das Controlregister geschrieben wurde. Ein Zugriff
+auf die Hardware erfolgt dabei nicht.
 
 \paragraph{write\_control}
 
+\begin{verbatim}
+void (*write_control) (struct parport *port, unsigned char s);
+\end{verbatim}
+
+Schreibt die Bitmaske s in das Controlregister des angegebenen Ports.
+
 \paragraph{frob\_control}
+
+\begin{verbatim}
+unsigned char (*frob_control) (struct parport *port,
+				unsigned char mask,
+				unsigned char val);
+\end{verbatim}
+
+TODO: Vermutlich muss der Treiber das nicht implementieren. Weglassen?
+
+This is equivalent to reading from the control register, masking out
+the bits in mask, exclusive-or'ing with the bits in val, and writing
+the result to the control register.
+
+As some ports don't allow reads from the control port, a software copy
+of its contents is maintained, so frob\_control is in fact only one
+port access.
 
 \paragraph{enable\_irq}
 
+\begin{verbatim}
+void (*enable_irq) (struct parport *port)
+\end{verbatim}
+
+Weist die Hardware an, in Zukunft Interrupts zu erzeugen.
+
 \paragraph{disable\_irq}
+
+\begin{verbatim}
+void (*data_forward) (struct parport *port)
+\end{verbatim}
+
+Deaktiviert die Interrupts auf der Hardware.
 
 \paragraph{data\_forward}
 
+\begin{verbatim}
+void (*data_forward) (struct parport *port)
+\end{verbatim}
+
+Aktiviert die Treiber des Datenports.
+
 \paragraph{data\_reverse}
+
+\begin{verbatim}
+void (*data_reverse) (struct parport *port)
+\end{verbatim}
+
+Places the data bus in a high impedance state, if port->modes has the
+PARPORT\_MODE\_TRISTATE bit set.
+
+Blubb?
 
 \subsubsection{EPP Port Funktionen}
 
@@ -232,14 +308,67 @@ Die Dokumentation der Funktionen wurde den Quellen des Linux-Kernels entnommen
 
 \paragraph{nibble\_read\_data}
 
+\begin{verbatim}
+size_t (*nibble_read_data) (struct parport *port, void *buf, size_t len, int flags);
+\end{verbatim}
+
+Liest einen Datenblock in Nibble-Mode.
+
 \paragraph{byte\_read\_data}
 
+\begin{verbatim}
+size_t (*byte_read_data) (struct parport *port, void *buf, size_t len, int flags)
+\end{verbatim}
+
+Liest einen Datenblock in Byte-Mode.
+
 \paragraph{compat\_write\_data}
+
+\begin{verbatim}
+size_t (*compat_write_data) (struct parport *port, const void *buf, size_t len, int flags)
+\end{verbatim}
+
+Schreibt einen Datenblock im Kompatibilitätsmodus.
 
 \subsection{Globale Funktionen den parport Subsystems}
 
 Die globalen Funktionen des parport Subsystems können sowohl von den Lowlevel- als auch
 Highlevel-Treibern verwendet werden.
+
+\subsubsection{Funktionen für Lowlevel-Treiber}
+
+\paragraph{parport\_register\_port}
+\begin{verbatim}
+struct parport *parport_register_port(unsigned long base, int irq, int dma, 
+                                      struct parport_operations *ops)
+\end{verbatim}
+
+Sobald ein Lowlevel-Treiber einen Parallelport detektiert und diesen den Highlevel-Treibern zur
+Verfügung stellen will, macht er den Port über diese Methode dem System bekannt.
+
+Die Struktur ops darf nicht freigegeben werden, bevor nicht parport\_remove\_port für den
+angegebenen Port aufgerufen wurde.
+
+Gerätetreiber sollten danach mit parport\_announce\_port über den neuen Parallelport informiert
+werden.
+
+\paragraph{parport\_remove\_port}
+\begin{verbatim}
+void parport_remove_port(struct parport *port)
+\end{verbatim}
+
+Entfernt einen Parallelport aus dem System. Alle registrierten Gerätetreiber werden durch den
+Aufruf ihrer jeweiligen detach Funktionen über die Entfernung des Ports informiert.
+
+\paragraph{parport\_announce\_port}
+\begin{verbatim}
+void parport_announce_port (struct parport *port)
+\end{verbatim}
+
+Macht einen registrierten Parallelport bei den Gerätetreibern bekannt, in dem die jeweiligen
+attach Funktionen der Gerätetreiber aufgerufen werden.
+
+\subsubsection{Funktionen für Highlevel-Treiber}
 
 \paragraph{parport\_register\_driver}
 
@@ -343,26 +472,96 @@ int parport_wait_event (struct parport *port, signed long timeout)
 
 
 \paragraph{parport\_negotiate}
+\begin{verbatim}
+int parport_negotiate (struct parport *, int mode)
+\end{verbatim}
 
 \paragraph{parport\_read}
+\begin{verbatim}
+ssize_t parport_read (struct parport *, void *buf, size_t len)
+\end{verbatim}
 
 \paragraph{parport\_write}
+\begin{verbatim}
+ssize_t parport_write (struct parport *, const void *buf, size_t len)
+\end{verbatim}
+
 
 \paragraph{parport\_open}
+\begin{verbatim}
+struct pardevice *parport_open (int devnum, const char *name,
+				int (*pf) (void *),
+				void (*kf) (void *),
+				void (*irqf) (int, void *,
+				struct pt_regs *),
+				int flags, void *handle)
+\end{verbatim}
+
 
 \paragraph{parport\_close}
+\begin{verbatim}
+void parport_close (struct pardevice *dev)
+\end{verbatim}
+
 
 \paragraph{parport\_device\_id}
+\begin{verbatim}
+ssize_t parport_device_id (int devnum, char *buffer, size_t len)
+\end{verbatim}
+
 
 \paragraph{parport\_device\_coords}
+\begin{verbatim}
+int parport_device_coords (int devnum, int *parport, int *mux, int *daisy)
+\end{verbatim}
 
 \paragraph{parport\_find\_class}
+\begin{verbatim}
+typedef enum {
+	PARPORT_CLASS_LEGACY = 0,       /* Non-IEEE1284 device */
+	PARPORT_CLASS_PRINTER,
+	PARPORT_CLASS_MODEM,
+	PARPORT_CLASS_NET,
+	PARPORT_CLASS_HDC,              /* Hard disk controller */
+	PARPORT_CLASS_PCMCIA,
+	PARPORT_CLASS_MEDIA,            /* Multimedia device */
+	PARPORT_CLASS_FDC,              /* Floppy disk controller */
+	PARPORT_CLASS_PORTS,
+	PARPORT_CLASS_SCANNER,
+	PARPORT_CLASS_DIGCAM,
+	PARPORT_CLASS_OTHER,            /* Anything else */
+	PARPORT_CLASS_UNSPEC,           /* No CLS field in ID */
+	PARPORT_CLASS_SCSIADAPTER
+} parport_device_class;
+
+int parport_find_class (parport_device_class cls, int from);
+\end{verbatim}
+
 
 \paragraph{parport\_find\_device}
+\begin{verbatim}
+int parport_find_device (const char *mfg, const char *mdl, int from)
+\end{verbatim}
+
 
 \paragraph{parport\_set\_timeout}
+\begin{verbatim}
+long parport_set_timeout (struct pardevice *dev, long inactivity)
+\end{verbatim}
+
 
 \section{Der MosChip MCS9815 Controller}
+
+Der MCS9815 ist ein Parallelport Controller Chip der Firma MosChip. Er kann
+zwei Parallelports über das PCI Interface an das System anbinden und unterstützt alle
+aktuellen Modi (SPP, PS2, EPP, ECP) der Parallelschnittstelle.
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[bb=0 0 724 671,scale=0.5]{./mcs9815_block_diagram.png}
+ % mcs9815_block_diagram.png: 965x895 pixel, 96dpi, 25.53x23.68 cm, bb=0 0 724 671
+\end{figure}
+
 
 \bibliography{literatur}
 
