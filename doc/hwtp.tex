@@ -1,3 +1,5 @@
+\bibliography{literatur}
+
 \documentclass[a4paper,11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T3,T1]{fontenc}
@@ -60,12 +62,21 @@
 
 \maketitle
 \tableofcontents
+\section{Zweck des Dokumentes}
+Im Rahmen der Lehrveranstaltung \textit{Hardwarenahe System- und Treiberprogrammierung} im Studiengang \textit{Verteilte und mobile Anwendungen (M.Sc)} der Hochschule Osnabrück soll in Gruppenarbeit eine Projektarbeit durchgeführt werden. Dieses Dokument dient zur Dokumention der geleisteten Arbeit und beleuchtet die gewählte Herangehensweise und die eingesetzten Technologien.
 
 \section{Einleitung}
 
-Hier sollten ein paar einleitende Worte stehen...
+Eine weit verbreitete Schnittstelle in PC-Systemen zum Datenaustausch mit Peripheriegeräten stellte über Jahre hinweg die Centronics-Schnittstelle dar. Ursprünglich wurde sie bereits Ende der 1960er Jahre entwickelt. Die Druckerfirma Centronics nutze sie zunächst für die Kommunikation mit den eigenen hergestellten Druckern, im Laufe der Zeit setzten aber auch viele andere Firmen (wie IBM) auf die Schnittstelle. Obwohl Centronics die Spezifikationen offenlegte, zeigten sich oftmals in den Implementierungen anderer Hersteller kleinere Inkompatibilitäten, die sich in gewissen Details äußerten.Trotz dieser kleineren Probleme entwickelte sich die Centronics-Schnittstelle zu einem Quasi-Standard zum Ansprechen von Druckern und anderer Peripherie. Von der IEEE wurde 1994 der Standard IEEE 1284 verabschiedet, der als \textit{parallele Schnittstelle} die Centronics-Schnittstelle ablöste, aber dennoch kompatibel zum alten \textit{Centronics-Standard} blieb. Der IEEE-Standard definiert die elektrischen Eigenschaften der Schnittstellen, die zu verwendenden Hardwareprotokolle und die zugehörigen Kabel. Für softwareseitige Protokolle wird auf Substandards verwiesen, die u.a. auch unabhängig von der eigentlichen Hardware agieren können. Heutzutage ist die parallele Schnittstelle (LPT) größtenteils durch modernere Schnittstellen, wie USB, ersetzt worden und erfährt nicht mehr die gleiche Bedeutung wie noch in den 1990er Jahren. 
 
-Bla bla
+ 
+\subsection{Aufgabenstellung und Projektziel}
+
+Moderne PCs und Notebooks verzichten heutzutage bereits oft auf die parallele Schnittstelle und bieten für zusätzliche Peripheriegeräte dafür USB-Anschlüsse. Zwar sieht der ATX-Gehäusestandard noch farbliche Kennungen für LPT-Schnittstellen vor, bindend muss aber kein Hersteller diese Schnittstelle auf seinen Platinen integrieren. Um dennoch z.B. ältere Drucker in modernen Systemen verwenden zu können, bietet sich der Einsatz von PCI-Adapterkarten an, die über den PCI-Bus nach Außen hin einen Anschluss für die parallele Schnittstelle liefern. Die Implementierung eines Linux-Treibers einer solchen PCI-Adapterkarte soll Gegenstand dieser Projektarbeit sein. 
+
+\subsection{Eingesetzte Hardware}  
+
+Als Hardwareziel kommt eine PCI-Karte der Firma Exsys Inc (http://www.exsys.com) zum Einsatz, auf der ein Chip der Firma Moschip (http://www.moschip.com/) zum Einsatz kommt. Der dort verwendete Mikrocontroller stellt einen MCS9815-Chip dar, der die PCI zu LPT-Kommunikation übernimmt. Zwar findet sich im Linux-Kernel bereits ein Treiber für diesen Mikrokontroller, aufgrund geringer Projekteressourcen fehlt es jedoch an weiteren Alternativen. Da diese Projektarbeit eher dem lehrhaften Charakter einer studentischen Arbeit entspricht und die PCI-Karte den Projektteilnehmern bereits vorliegt, stellt die Entwicklung eines zusätzlichen Treibers für diese Karte nicht nur eine gute Übung dar, sondern ist auch gleichzeitig eine Herausforderung eine tatsächlich existierende Hardware unter dem Betriebssystem Linux zum Laufen zu bringen.  
 
 \section{Parallelportschnittstelle}
 
@@ -564,5 +575,6 @@ aktuellen Modi (SPP, PS2, EPP, ECP) der Parallelschnittstelle.
 
 
 \bibliography{literatur}
+
 
 \end{document}
