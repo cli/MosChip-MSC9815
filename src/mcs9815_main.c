@@ -4,12 +4,10 @@
 #include <linux/moduleparam.h>
 #include <linux/parport.h>
 #include <linux/pci.h>
+#include "mcs9815.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Nerdbuero Staff");
-
-// Function prototypes
-static long mcs9815_ioctl(struct file*, unsigned int, unsigned long);
 
 static const struct pci_device_id id_table[] =
 {
@@ -31,54 +29,52 @@ static struct pci_driver mcs9815_pci_driver =
 	.id_table = id_table
 };
 
-struct file_operations fops =
-{
-	.owner = THIS_MODULE,
-	.unlocked_ioctl = mcs9815_ioctl
-};
-
 struct parport_operations ops =
 {
 	
 };
 
-struct mcs9815_port
-{
-	struct parport* port;
-	
-	// Every port uses two BARs as I/O ports
-	unsigned long bar0;	// Standard parallel port register
-	unsigned long bar1;	// Conf register / ECR register
-};
-
 static struct mcs9815_port* port0 = NULL;
 static struct mcs9815_port* port1 = NULL;
 
-// We allow access to the parport via ioctl'ing the /dev/mcs9815 device.
-// This is only for testing purposes as this might be dangerous if invalid 
-// data is sent to the registers. Ye be warned!
-static long mcs9815_ioctl(struct file* file, unsigned int cmd, unsigned long arg)
-{
-	return -ENOTTY;
-}
-
+// Probes the Base Address Register (BAR) of the given PCI device
 static int probe_bar(struct pci_dev* dev, unsigned long* start, int bar)
 {
 	unsigned long end;
-	start = pci_resource_start(dev, bar);
+	*start = pci_resource_start(dev, bar);
 	end   = pci_resource_end(dev, bar);
-	return end - start;	
+	return end - *start;	
 } 
 
-static int register_parport(struct mcs9815_port* port)
+// Registers the given MCS9815 port at the parport subsystem
+static int register_parport(struct mcs9815_port* port, struct parport_operations* ops)
 {
+	port->port = parport_register_port(0, 0, 0, ops);
+	if(unlikely(port->port == NULL))
+	{
+		return -1;
+	}
+	return 0;
 }
 
+// Unregisters the port at the parport subsystem and the frees the
+// resources of the port
+static void free_parport(struct mcs9815_port* port)
+{
+	if(port != NULL)
+	{
+		if(port->port != NULL)
+		{
+			parport_remove_port(port->port); // Does function free port0->port?
+		}
+		kfree(port);
+	}
+}
+
+// PCI probe function that is called by the kernel if it detects the
+// hardware specified by the above id_table entry
 static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 {
-	unsigned long res_start, res_end, res_flags;
-	unsigned int n;
-	u32 val;
 	struct parport_operations *ops;
 
 	if(unlikely(pci_enable_device(dev) < 0)) // Error codes < 0?
@@ -86,49 +82,45 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 		printk("pci_enable_device failed!");
 		return -1;
 	}
+
+	// Now it's time to register this module as parport driver, isn't it?
+	ops = kmalloc(sizeof(struct parport_operations), GFP_KERNEL);
+	if(ops == NULL)
+	{
+		goto err0;
+	}
 	
 	// Allocate memory for port structures
 	port0 = kmalloc(sizeof(struct mcs9815_port), GFP_KERNEL);
 	if(unlikely(port0 == NULL))
 	{
 		printk("Cannot allocate structure for port 0!\n");
-		goto err0; // Disable PCI device and exit
+		goto err1; // Free ops, disable PCI device and exit
 	}
+	
 	port1 = kmalloc(sizeof(struct mcs9815_port), GFP_KERNEL);
 	if(unlikely(port1 == NULL))
 	{
 		printk("Cannot allocate structure for port 1\n");
-		kfree(port0); // Free structure of port 0
-		port0 = NULL;
-		goto err0;    // Disable PCI device and exit
+		goto err2; // Free ports, free ops, disable PCI device and exit
 	}
 
 	// Probe I/O areas; MCS9815 uses two bars per port
-	probe_bar(&(port0->bar0), 0);
-	probe_bar(&(port0->bar1), 1);
-	probe_bar(&(port1->bar0), 2);
-	probe_bar(&(port1->bar1), 3);	
-
-	// Read Subsystem ID and Subvendor ID (offset 0x2C) from PCI configuration 
-	// space to determine the port configuration
-	pci_read_config_dword(dev, 0x2C, &val);
-	printk("Subsystem ID: %x\n", val >> 16);
-	printk("Subvendor ID: %x\n", val & 0xFFFF);
-
-	// Now it's time to register this module as parport driver, isn't it?
-	ops = kmalloc(sizeof(struct parport_operations), GFP_KERNEL);
-	if(ops == NULL)
-	{
-		goto err1;
-	}
+	probe_bar(dev, &(port0->bar0), 0);
+	probe_bar(dev, &(port0->bar1), 1);
+	probe_bar(dev, &(port1->bar0), 2);
+	probe_bar(dev, &(port1->bar1), 3);	
 	
 	// We can adjust the base, irq and dma parameter later in the
 	// parport struct
 	printk("parport_register_port\n");
-	port0 = parport_register_port(0, 0, 0, ops);
-	if(port0 == NULL)
+	if(register_parport(port0, ops) != 0)
 	{
-		printk("Not enough memory to allocate parport structure!\n");
+		goto err2;
+	}
+	
+	if(register_parport(port1, ops) != 0)
+	{
 		goto err2;
 	}
 
@@ -141,29 +133,36 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	printk("PCI probe finished.\n");
 	return 0;
 
+// Error handling below
 err2:
-	kfree(ops);
-
-err1:
-	kfree(port0);
-	kfree(port1);
+	free_parport(port0);
+	free_parport(port1);
 	port0 = NULL;
 	port1 = NULL;
+
+err1:
+	kfree(ops);
 
 err0:
 	pci_disable_device(dev);
 	return -1;
 }
 
+// Called when the module's PCI driver is removed from the kernel.
+// This functions unregisters the ports, frees its resources and
+// disables the PCI device.
 static void pci_remove(struct pci_dev* dev)
 {
-	// Remove parallelport from the parport subsystem
-	parport_remove_port(port0);
+	// Remove parallelport from the parport subsystem and 
+	// free the allocated resources
+	free_parport(port0);
+	free_parport(port1);
 	
 	// Disable PCI device
 	pci_disable_device(dev);
 }
 
+// Module init function
 static int __init mcs9815_init(void)
 {
 	printk(KERN_DEBUG "MCS9815 module loading...\n");
@@ -182,6 +181,7 @@ static int __init mcs9815_init(void)
 	return 0;
 }
 
+// Module exit function
 static void __exit mcs9815_exit(void)
 {
 	printk(KERN_DEBUG "MCS9815 module unloading...\n");

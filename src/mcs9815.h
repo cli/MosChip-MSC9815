@@ -1,2 +1,16 @@
-#define PARPORT0_BASE 0x378 	// Default base port for first parallel port
-#define PARPORT1_BASE 0x278	// Default base port for second parallel port
+#ifndef _MCS9815_H_
+#define _MCS9815_H_
+
+#include <linux/parport.h>
+#include <linux/pci.h>
+
+struct mcs9815_port
+{
+	struct parport* port;
+	
+	// Every port uses two BARs as I/O ports
+	unsigned long bar0;	// Standard parallel port register
+	unsigned long bar1;	// Conf register / ECR register
+};
+
+#endif

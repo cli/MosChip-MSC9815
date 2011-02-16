@@ -3,6 +3,7 @@ ifneq ($(KERNELRELEASE),)
 # wurde dieses Makefile vom Kernel-Build-System aufgerufen.
 # Dann reicht die folgende Zeile aus, um das Modul zu bauen.
 obj-m    := mcs9815.o
+mcs9815-objs := mcs9815_main.o mcs9815_ops.o
 else
 # Hierher kommt man, wenn make direkt aus dem
 # Quellverzeichnis aufgerufen wurde. Dann wird make
