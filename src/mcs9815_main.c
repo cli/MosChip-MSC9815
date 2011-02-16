@@ -29,10 +29,7 @@ static struct pci_driver mcs9815_pci_driver =
 	.id_table = id_table
 };
 
-struct parport_operations ops =
-{
-	
-};
+extern struct parport_operations ops;
 
 static struct mcs9815_port* port0 = NULL;
 static struct mcs9815_port* port1 = NULL;
