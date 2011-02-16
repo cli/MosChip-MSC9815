@@ -206,19 +206,7 @@ struct parport {
     struct parport_operations *ops;
 };\end{verbatim}
 
-Dem Bitfeld modes kann man entnehmen, welche Modi der Schnittstelle unterstützt werden (SPP, EPP).
-
-\subsubsection{parport\_device\_info}
-
-\begin{verbatim}
-struct parport_device_info {
-    parport_device_class class;
-    const char *class_name;
-    const char *mfr;
-    const char *model;
-    const char *cmdset;
-    const char *description;
-};\end{verbatim} 
+Dem Bitfeld \verb|modes| kann man entnehmen, welche Modi der Schnittstelle unterstützt werden (SPP, EPP).
 
 \subsubsection{parport\_operations}
 
@@ -374,12 +362,29 @@ Blubb?
 \subsubsection{EPP Port Funktionen}
 
 \paragraph{epp\_write\_data}
+\begin{verbatim}
+size_t (*epp_write_data) (struct parport *port, const void *buf, size_t len, int flags)
+\end{verbatim}
+
+Schreibt den Buffer im EPP Modus an den Port und gibt die Anzahl der geschriebenen Bytes zurück.
 
 \paragraph{epp\_read\_data}
+\begin{verbatim}
+size_t (*epp_read_data) (struct parport *port, void *buf, size_t len, int flags)
+\end{verbatim}
+Liest Bytes im EPP Modus vom angegebenen Port und gibt die Anzahl der gelesenen Bytes zurück.
 
 \paragraph{epp\_write\_addr}
+\begin{verbatim}
+size_t (*epp_write_addr) (struct parport *port, const void *buf, size_t len, int flags)
+\end{verbatim}
+Schreibt EPP-Adressen in den angegebenen Port und gibt die Anzahl der geschriebenen Bytes zurück.
 
 \paragraph{epp\_read\_addr}
+\begin{verbatim}
+size_t (*epp_read_addr) (struct parport *port, void *buf, size_t len, int flags)
+\end{verbatim}
+
 
 \subsubsection{ECP und andere Portfunktionen}
 
