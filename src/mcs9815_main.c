@@ -43,6 +43,12 @@ static int probe_bar(struct pci_dev* dev, unsigned long* start, int bar)
 	return end - *start;	
 } 
 
+static void init_parport(struct mcs9815_port* port, const char* name)
+{
+	port->port->name = name;
+	port->port->irq  = -1; // -1 disables interrupt
+}
+
 // Registers the given MCS9815 port at the parport subsystem
 static int register_parport(struct mcs9815_port* port, struct parport_operations* ops)
 {
@@ -121,11 +127,14 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 		goto err2;
 	}
 
-	// TODO: Adjust parameter
+	// Adjust parameter
+	init_parport(port0, "mcs9815-port0");
+	init_parport(port1, "mcs9815-port1");
 	
 	// We have successfully registered our parport, now it's time to
 	// announce it to the system and device drivers
-	//parport_announce_port(port0);
+	parport_announce_port(port0->port);
+	parport_announce_port(port1->port);
 
 	printk("PCI probe finished.\n");
 	return 0;
