@@ -1,9 +1,17 @@
 #include <linux/module.h>
 #include <linux/parport.h>
+#include "mcs9815.h"
 
-void write_data(struct parport* parport, unsigned char c)
+extern struct mcs9815_port* port0;
+extern struct mcs9815_port* port1;
+
+#define PORT(p) \
+	(p == port0->port ? port0 : port1)
+
+void write_data(struct parport* parport, unsigned char value)
 {
-	printk("mcs9815: write_data\n");
+	printk("%s: write_data\n", parport->name);
+	//outb(value, PORT(parport)->bar0);
 }
 
 unsigned char read_data(struct parport* parport)

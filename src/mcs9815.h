@@ -6,6 +6,16 @@
 
 #define BAR_LEN 8
 
+// Chip register offsets
+#define REG_DPR 0
+#define REG_DSR 1
+#define REG_DCR 2
+#define REG_EPPADDR 3
+#define REG_EPPDATA 4
+#define REG_CFIFO 0
+#define REG_CONFB 1
+#define REG_ECR 2
+
 struct mcs9815_port
 {
 	struct parport* port;
