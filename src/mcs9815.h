@@ -4,6 +4,8 @@
 #include <linux/parport.h>
 #include <linux/pci.h>
 
+#define BAR_LEN 8
+
 struct mcs9815_port
 {
 	struct parport* port;
