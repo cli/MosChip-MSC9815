@@ -11,58 +11,74 @@ extern struct mcs9815_port* port1;
 void write_data(struct parport* parport, unsigned char value)
 {
 	printk("%s: write_data\n", parport->name);
-	//outb(value, PORT(parport)->bar0);
+	outb(value, PORT(parport)->bar0 + REG_EPPDATA);
 }
 
 unsigned char read_data(struct parport* parport)
 {
-	printk("mcs9815: read_data\n");
-	return 0;
+	printk("%s: read_data\n", parport->name);
+	return inb(PORT(parport)->bar0 + REG_DPR);
 }
 
-void write_control(struct parport* parport, unsigned char c)
+void write_control(struct parport* parport, unsigned char value)
 {
-	printk("mcs9815: write_control\n");
+	struct mcs9815_port* p = PORT(parport);
+	printk("%s: write_control\n", parport->name);
+	outb(value, p->bar0 + REG_DCR);
+	p->control = value;
 }
 
 unsigned char read_control(struct parport* parport)
 {
-	printk("mcs9815: read_control\n");
-	return 0;
+	printk("%s: read_control\n", parport->name);
+	return PORT(parport)->control;
 }
 
 unsigned char frob_control(struct parport* parport, unsigned char mask,
 							unsigned char val)
 {
-	printk("mcs9815: frob_control\n");
-	return 0;
+	struct mcs9815_port* port = PORT(parport);
+	printk("%s: frob_control\n", parport->name);
+	
+	// Masking out the bits, xor'ing with val ...
+	port->control = (port->control & mask) ^ val;
+	
+	// ... and write the result to control register
+	write_control(parport, port->control);
+	
+	return port->control;
 }
 
 unsigned char read_status(struct parport* parport)
 {
-	printk("mcs9815: read_status\n");
-	return 0;
+	printk("%s: read_status\n", parport->name);
+	return inb(PORT(parport)->bar0 + REG_DSR);
 }
-
 
 void enable_irq(struct parport* parport)
 {
-	printk("mcs9815: enable_irq\n");
+	printk("%s: enable_irq\n", parport->name);
+	
+	// Set bit 4 of control register
+	write_control(parport, read_control(parport) | (1 << 4));
 }
 
 void disable_irq(struct parport* parport)
 {
-	printk("mcs9815: disable_irq\n");
+	printk("%s: disable_irq\n", parport->name);
+	
+	// Unset bit 4 of control register
+	write_control(parport, read_control(parport) & (~(1 << 4)));
 }
 
 void data_forward(struct parport* parport)
 {
-	printk("mcs9815: data_forward\n");
+	printk("%s: data_forward\n", parport->name);
 }
 
 void data_reverse(struct parport* parport)
 {
-	printk("mcs9815: data_reverse\n");
+	printk("%s: data_reverse\n", parport->name);
 }
 
 void init_state(struct pardevice* pardev, struct parport_state* parstate)
@@ -72,12 +88,12 @@ void init_state(struct pardevice* pardev, struct parport_state* parstate)
 
 void save_state(struct parport* parport, struct parport_state* parstate)
 {
-	printk("mcs9815: save_state\n");
+	printk("%s: save_state\n", parport->name);
 }
 
 void restore_state(struct parport* parport, struct parport_state* parstate)
 {
-	printk("mcs9815: restore_state\n");
+	printk("%s: restore_state\n", parport->name);
 }
 
 struct parport_operations ops =
