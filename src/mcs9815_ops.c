@@ -57,10 +57,20 @@ void data_reverse(struct parport* parport)
 	printk("mcs9815: data_reverse\n");
 }
 
-/* For core parport code. */
-//void (*init_state)(struct pardevice *, struct parport_state *);
-//void (*save_state)(struct parport *, struct parport_state *);
-//void (*restore_state)(struct parport *, struct parport_state *);
+void init_state(struct pardevice* pardev, struct parport_state* parstate)
+{
+	printk("mcs9815: init_state\n");
+}
+
+void save_state(struct parport* parport, struct parport_state* parstate)
+{
+	printk("mcs9815: save_state\n");
+}
+
+void restore_state(struct parport* parport, struct parport_state* parstate)
+{
+	printk("mcs9815: restore_state\n");
+}
 
 struct parport_operations ops =
 {
@@ -71,12 +81,17 @@ struct parport_operations ops =
 	.read_control  = read_control,
 	.frob_control  = frob_control,
 	.read_control  = read_control,
+	.read_status   = read_status,
 	
 	.enable_irq  = enable_irq,
 	.disable_irq = disable_irq,
 	
 	.data_forward = data_forward,
 	.data_reverse = data_reverse,
+
+	.init_state    = init_state,
+	.save_state    = save_state,
+	.restore_state = restore_state,
 
 	.owner = THIS_MODULE,
 };
