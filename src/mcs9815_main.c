@@ -31,8 +31,8 @@ static struct pci_driver mcs9815_pci_driver =
 
 extern struct parport_operations ops;
 
-static struct mcs9815_port* port0 = NULL;
-static struct mcs9815_port* port1 = NULL;
+struct mcs9815_port* port0 = NULL;
+struct mcs9815_port* port1 = NULL;
 
 // Probes the Base Address Register (BAR) of the given PCI device
 static int probe_bar(struct pci_dev* dev, unsigned long* start, int bar)
