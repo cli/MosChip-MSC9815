@@ -45,8 +45,10 @@ static int probe_bar(struct pci_dev* dev, unsigned long* start, int bar)
 
 static void init_parport(struct mcs9815_port* port, const char* name)
 {
-	port->port->name = name;
-	port->port->irq  = -1; // -1 disables interrupt
+	port->port->name  = name;
+	port->port->irq   = -1; // -1 disables interrupt
+	port->port->modes = PARPORT_MODE_PCSPP | PARPORT_MODE_SAFEININT;
+	port->port->dma   = PARPORT_DMA_NONE;
 }
 
 // Registers the given MCS9815 port at the parport subsystem
@@ -78,8 +80,6 @@ static void free_parport(struct mcs9815_port* port)
 // hardware specified by the above id_table entry
 static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 {
-	struct parport_operations *ops;
-
 	if(unlikely(pci_enable_device(dev) < 0)) // Error codes < 0?
 	{
 		printk("pci_enable_device failed!");
@@ -87,11 +87,11 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	}
 
 	// Now it's time to register this module as parport driver, isn't it?
-	ops = kmalloc(sizeof(struct parport_operations), GFP_KERNEL);
+/*	ops = kmalloc(sizeof(struct parport_operations), GFP_KERNEL);
 	if(ops == NULL)
 	{
 		goto err0;
-	}
+	}*/
 	
 	// Allocate memory for port structures
 	port0 = kmalloc(sizeof(struct mcs9815_port), GFP_KERNEL);
@@ -117,13 +117,15 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	// We can adjust the base, irq and dma parameter later in the
 	// parport struct
 	printk("parport_register_port\n");
-	if(register_parport(port0, ops) != 0)
+	if(register_parport(port0, &ops) != 0)
 	{
+		printk("mcs9815: register_parport failed!\n");
 		goto err2;
 	}
 	
-	if(register_parport(port1, ops) != 0)
+	if(register_parport(port1, &ops) != 0)
 	{
+		printk("mcs9815: register_parport failed\n");
 		goto err2;
 	}
 
@@ -147,7 +149,7 @@ err2:
 	port1 = NULL;
 
 err1:
-	kfree(ops);
+	//kfree(ops);
 
 err0:
 	pci_disable_device(dev);
