@@ -41,14 +41,6 @@ static int probe_bar(struct pci_dev* dev, unsigned long* start, int bar)
 	*start = pci_resource_start(dev, bar);
 	end   = pci_resource_end(dev, bar);
 	return end - *start;	
-} 
-
-static void init_parport(struct mcs9815_port* port, const char* name)
-{
-	port->port->name  = name;
-	port->port->irq   = -1; // -1 disables interrupt
-	port->port->modes = PARPORT_MODE_PCSPP | PARPORT_MODE_SAFEININT;
-	port->port->dma   = PARPORT_DMA_NONE;
 }
 
 // Registers the given MCS9815 port at the parport subsystem
@@ -71,9 +63,50 @@ static void free_parport(struct mcs9815_port* port)
 		if(port->port != NULL)
 		{
 			parport_remove_port(port->port); // Does function free port0->port?
+			release_region(port->bar0, BAR_LEN); // What happens if we release the port without owning it?
+			release_region(port->bar1, BAR_LEN);
 		}
 		kfree(port);
 	}
+}
+
+static int init_parport(struct pci_dev* dev, struct mcs9815_port* port, 
+                          const char* name, int bar0, int bar1)
+{
+	probe_bar(dev, &(port->bar0), bar0);
+	probe_bar(dev, &(port->bar1), bar1);
+	
+	// Request I/O port regions
+	if(!request_region(port->bar0, BAR_LEN, name))
+	{
+		return -1;
+	}
+	
+	if(!request_region(port->bar1, BAR_LEN, name))
+	{
+		return -2;
+	}
+
+	// We can adjust the base, irq and dma parameter later in the
+	// parport struct
+	printk("parport_register_port\n");
+	if(register_parport(port, &ops) != 0)
+	{
+		printk("mcs9815: register_parport failed!\n");
+		return -3;
+	}
+	
+	// Initialize parport structure
+	port->port->name  = name;
+	port->port->irq   = -1; // -1 disables interrupt
+	port->port->modes = PARPORT_MODE_PCSPP | PARPORT_MODE_SAFEININT;
+	port->port->dma   = PARPORT_DMA_NONE;
+	
+	// We have successfully registered our parport, now it's time to
+	// announce it to the system and device drivers
+	parport_announce_port(port->port);
+	
+	return 0;
 }
 
 // PCI probe function that is called by the kernel if it detects the
@@ -88,64 +121,36 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	
 	// Allocate memory for port structures
 	port0 = kmalloc(sizeof(struct mcs9815_port), GFP_KERNEL);
-	if(unlikely(port0 == NULL))
+	if(likely(port0 != NULL))
 	{
-		printk("Cannot allocate structure for port 0!\n");
-		goto err1; // Free ops, disable PCI device and exit
+		if(init_parport(dev, port0, "mcs9815-port0", 0, 1) != 0)
+		{
+			printk("Cannot initialize port 0!\n");
+			free_parport(port0);
+			port0 = NULL;
+		}
 	}
 	
 	port1 = kmalloc(sizeof(struct mcs9815_port), GFP_KERNEL);
-	if(unlikely(port1 == NULL))
+	if(likely(port1 != NULL))
 	{
-		printk("Cannot allocate structure for port 1\n");
-		goto err2; // Free ports, free ops, disable PCI device and exit
+		if(init_parport(dev, port1, "mcs9815-port1", 2, 3) != 0)
+		{
+			printk("Cannot initialize port 1!\n");
+			free_parport(port1);
+			port1 = NULL;
+		}
 	}
 
-	// Probe I/O areas; MCS9815 uses two bars per port
-	probe_bar(dev, &(port0->bar0), 0);
-	probe_bar(dev, &(port0->bar1), 1);
-	probe_bar(dev, &(port1->bar0), 2);
-	probe_bar(dev, &(port1->bar1), 3);	
-	
-	// We can adjust the base, irq and dma parameter later in the
-	// parport struct
-	printk("parport_register_port\n");
-	if(register_parport(port0, &ops) != 0)
+	if(port0 == NULL && port1 == NULL)
 	{
-		printk("mcs9815: register_parport failed!\n");
-		goto err1;
+		printk("Initialization of both ports failed -> disabling PCI device\n");
+		pci_disable_device(dev);
+		return -2;
 	}
-	
-	if(register_parport(port1, &ops) != 0)
-	{
-		printk("mcs9815: register_parport failed\n");
-		goto err1;
-	}
-
-	// Adjust parameter
-	init_parport(port0, "mcs9815-port0");
-	init_parport(port1, "mcs9815-port1");
-	
-	// Request I/O port regions
-	
-	// We have successfully registered our parport, now it's time to
-	// announce it to the system and device drivers
-	parport_announce_port(port0->port);
-	parport_announce_port(port1->port);
 
 	printk("PCI probe finished.\n");
 	return 0;
-
-// Error handling below
-err1:
-	free_parport(port0);
-	free_parport(port1);
-	port0 = NULL;
-	port1 = NULL;
-
-err0:
-	pci_disable_device(dev);
-	return -1;
 }
 
 // Called when the module's PCI driver is removed from the kernel.
@@ -157,8 +162,6 @@ static void pci_remove(struct pci_dev* dev)
 	// free the allocated resources
 	free_parport(port0);
 	free_parport(port1);
-	
-	// Free the registered I/O port regions
 	
 	// Disable PCI device
 	pci_disable_device(dev);
