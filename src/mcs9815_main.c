@@ -12,12 +12,12 @@ MODULE_AUTHOR("Nerdbuero Staff");
 static const struct pci_device_id id_table[] =
 {
 	{
-		.vendor = 0x9710,			/* MosChip Semiconductors */
-		.device = 0x9815,			/* MCS9815 parport controller */
-		.subvendor = 0x1000,
-		.subdevice = 0x0020,
-		.class = 0x078000,			/* See spec p. 9 */
-		.class_mask = 0,			/* ? */
+		.vendor      = 0x9710,			/* MosChip Semiconductors */
+		.device      = 0x9815,			/* MCS9815 parport controller */
+		.subvendor   = 0x1000,
+		.subdevice   = 0x0020,
+		.class       = 0x078000,		/* See spec p. 9 */
+		.class_mask  = 0,				/* ? */
 		.driver_data = 0
 	},
 	{0, }
@@ -85,13 +85,6 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 		printk("pci_enable_device failed!");
 		return -1;
 	}
-
-	// Now it's time to register this module as parport driver, isn't it?
-/*	ops = kmalloc(sizeof(struct parport_operations), GFP_KERNEL);
-	if(ops == NULL)
-	{
-		goto err0;
-	}*/
 	
 	// Allocate memory for port structures
 	port0 = kmalloc(sizeof(struct mcs9815_port), GFP_KERNEL);
@@ -120,18 +113,20 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	if(register_parport(port0, &ops) != 0)
 	{
 		printk("mcs9815: register_parport failed!\n");
-		goto err2;
+		goto err1;
 	}
 	
 	if(register_parport(port1, &ops) != 0)
 	{
 		printk("mcs9815: register_parport failed\n");
-		goto err2;
+		goto err1;
 	}
 
 	// Adjust parameter
 	init_parport(port0, "mcs9815-port0");
 	init_parport(port1, "mcs9815-port1");
+	
+	// Request I/O port regions
 	
 	// We have successfully registered our parport, now it's time to
 	// announce it to the system and device drivers
@@ -142,14 +137,11 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	return 0;
 
 // Error handling below
-err2:
+err1:
 	free_parport(port0);
 	free_parport(port1);
 	port0 = NULL;
 	port1 = NULL;
-
-err1:
-	//kfree(ops);
 
 err0:
 	pci_disable_device(dev);
@@ -165,6 +157,8 @@ static void pci_remove(struct pci_dev* dev)
 	// free the allocated resources
 	free_parport(port0);
 	free_parport(port1);
+	
+	// Free the registered I/O port regions
 	
 	// Disable PCI device
 	pci_disable_device(dev);
