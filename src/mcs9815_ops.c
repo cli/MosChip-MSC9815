@@ -25,13 +25,13 @@ void write_control(struct parport* parport, unsigned char value)
 	struct mcs9815_port* p = PORT(parport);
 	printk("%s: write_control\n", parport->name);
 	outb(value, p->bar0 + REG_DCR);
-	p->control = value;
+	p->ctrl = value;
 }
 
 unsigned char read_control(struct parport* parport)
 {
 	printk("%s: read_control\n", parport->name);
-	return PORT(parport)->control;
+	return PORT(parport)->ctrl;
 }
 
 unsigned char frob_control(struct parport* parport, unsigned char mask,
@@ -41,12 +41,12 @@ unsigned char frob_control(struct parport* parport, unsigned char mask,
 	printk("%s: frob_control\n", parport->name);
 	
 	// Masking out the bits, xor'ing with val ...
-	port->control = (port->control & mask) ^ val;
+	port->ctrl = (port->ctrl & mask) ^ val;
 	
 	// ... and write the result to control register
-	write_control(parport, port->control);
+	write_control(parport, port->ctrl);
 	
-	return port->control;
+	return port->ctrl;
 }
 
 unsigned char read_status(struct parport* parport)
@@ -84,11 +84,19 @@ void data_reverse(struct parport* parport)
 void init_state(struct pardevice* pardev, struct parport_state* parstate)
 {
 	printk("mcs9815: init_state\n");
+	
+	// Initialize chip (see Master Reset Conditions, p. 12)
+	parstate->u.pc.ctr = 0xc;
+	write_control(PORT(pardev->port)->port, parstate->u.pc.ctr);
+
+	// Write 0x35 in ECR register for EPP mode
 }
 
 void save_state(struct parport* parport, struct parport_state* parstate)
 {
 	printk("%s: save_state\n", parport->name);
+	//const struct parport_pc_private* priv = parport->physport->private_data;
+	
 }
 
 void restore_state(struct parport* parport, struct parport_state* parstate)

@@ -4,6 +4,7 @@
 #include <linux/moduleparam.h>
 #include <linux/parport.h>
 #include <linux/pci.h>
+#include <linux/platform_device.h>
 #include "mcs9815.h"
 
 MODULE_LICENSE("GPL");
@@ -73,6 +74,8 @@ static void free_parport(struct mcs9815_port* port)
 static int init_parport(struct pci_dev* dev, struct mcs9815_port* port, 
                           const char* name, int bar0, int bar1)
 {
+	struct platform_device *pdev = NULL;
+
 	probe_bar(dev, &(port->bar0), bar0);
 	probe_bar(dev, &(port->bar1), bar1);
 	
@@ -101,6 +104,9 @@ static int init_parport(struct pci_dev* dev, struct mcs9815_port* port,
 	port->port->irq   = -1; // -1 disables interrupt
 	port->port->modes = PARPORT_MODE_PCSPP | PARPORT_MODE_SAFEININT;
 	port->port->dma   = PARPORT_DMA_NONE;
+
+	pdev = platform_device_register_simple("parport_pc", -1, NULL, 0);
+	port->port->dev = &(pdev->dev);
 	
 	// We have successfully registered our parport, now it's time to
 	// announce it to the system and device drivers
