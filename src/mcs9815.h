@@ -24,8 +24,8 @@ struct mcs9815_port
 	unsigned long bar0;	// Standard parallel port register
 	unsigned long bar1;	// Conf register / ECR register
 	
-	// Cached control register
-	unsigned char control;
+	// Cached control registers 
+	unsigned int ctrl;
 };
 
 #endif
