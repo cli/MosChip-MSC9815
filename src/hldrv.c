@@ -16,28 +16,20 @@ static int timer_interval = 500;
 module_param(timer_interval, int, S_IRUGO);
 static unsigned char countvalue = 0;
 
-/**
- * Write value to Parallelport
- * */
-static void writeValueToParallel(void)
-{
-	int written;
-	//written = parport_write(dev->port, &countvalue, 1); // Last param is number of bytes to write
-	dev->port->ops->write_data(dev->port, countvalue);
-	printk("nerdbuero: Written byte to parport\n");
-}
-
-/**
- * Timer function. Increments an Integervalue and calls Output
- * to parallelport
- * */
+// Increments the counter and writes it to parallelport
 static void timer_strobe(unsigned long data)
 {
-	printk("Tick!\n");
+	int written;
+	printk(KERN_DEBUG "hldrv: Tick!\n");
 	if (atomic_read(&running) > 0)
 	{
 		countvalue++;
-		writeValueToParallel();
+	        // Writes the countvalue into our port
+       		written = parport_write(dev->port, &countvalue, 1);
+        	// Alternative: dev->port->ops->write_data(dev->port, countvalue);
+        	// This method is probably faster as parport_write has an additional
+        	// call to compat_write_data() in between, but parport_write()
+        	// is more high-level...
 
 		timer.expires = jiffies + timer_interval;
 		add_timer(&timer);
@@ -46,31 +38,30 @@ static void timer_strobe(unsigned long data)
 
 static void nerdbuero_detach (struct parport *port)
 {
-	//This Function does literally nothing, but it's nice mentioning it!
+	// This Function does literally nothing, but it's nice mentioning it!
+	// Here be dragons!
 }
-/* HIER STIMMT NOCH WAS NICHT!!!!
- * */
+
 static void nerdbuero_attach (struct parport *port)
 {
 	if(dev == NULL)
 	{
-		dev = parport_register_device(port, "nerdbuero_driver", 
-							   NULL/*lp_preempt*/, NULL, NULL, 0,
-								NULL /*(void *) &lp_table[nr]*/);
-		printk("Nerdbueroname: %s\n", port->name);
+		dev = parport_register_device(port, "nerdbuero_driver",
+						NULL /*lp_preempt*/, NULL, NULL, 0,
+						NULL /*(void *) &lp_table[nr]*/);
 		if(dev == NULL)
 		{
-			printk("Cannot register parport device!\n");
+			printk(KERN_WARNING "hldrv: cannot register parport device!\n");
 			return;
 		}
-		printk("Device registered\n");
+		printk(KERN_DEBUG "hldrv: device registered\n");
 		
 		if(parport_claim(dev) != 0)
 		{
-			printk("Cannot claim device!\n");
+			printk(KERN_WARNING "hldrv: cannot claim device!\n");
 			return;
 		}
-		printk("Parport claimed\n");
+		printk(KERN_DEBUG "hldrv: parport claimed\n");
 		
 		parport_negotiate(dev->port, IEEE1284_MODE_COMPAT); // COMPAT = COMAPTIBLE = SPP
 		
@@ -85,19 +76,16 @@ static void nerdbuero_attach (struct parport *port)
 	}
 }
 
-/**
- * Properties of the parport_driver struct needed by the parportsystem
- * 
- * */
+// Parport driver struct
 static struct parport_driver nerdbuero_driver = {
-	.name = "nerdbueroprinter",
+	.name = "nerdbueroblinker",
 	.attach = nerdbuero_attach,
 	.detach = nerdbuero_detach,
 };
 
 static int __init parport_init(void)
 {
-	printk("Parport module loading...\n");
+	printk(KERN_INFO "hldrv module loading...\n");
     
 	if (parport_register_driver (&nerdbuero_driver)) //returns 0 on success
 	{
@@ -105,17 +93,24 @@ static int __init parport_init(void)
 		return -EIO;
 	}
 
-	printk("Parport module loaded.\n");
+	printk(KERN_INFO "hldrv module loaded.\n");
 	return 0;
 }
 
 static void __exit parport_exit(void)
 {
-	printk("Parport module unloading...\n");
+	printk(KERN_INFO "hldrv module unloading...\n");
+	
+	// Stop timer
 	atomic_set(&running, 0);
 	del_timer_sync(&timer);
-	parport_release (dev);
-	printk("Parport module unloaded.\n");
+	
+	// Release parport and unregister hldrv as device driver
+	if(dev != NULL)
+		parport_release(dev);
+	parport_unregister_driver(&nerdbuero_driver);
+
+	printk(KERN_INFO "hldrv module unloaded.\n");
 }
 
 module_init(parport_init);
