@@ -36,13 +36,16 @@ static void writeValueToParallel(void)
  * */
 static void timer_strobe(unsigned long data)
 {
-	countvalue++;
-	writeValueToParallel();
-    
-	if(atomic_read(&running) > 0)
+	if (dev != NULL)
 	{
-		timer.expires = jiffies + timer_interval;
-		add_timer(&timer);
+		countvalue++;
+		writeValueToParallel();
+		
+		if(atomic_read(&running) > 0)
+		{
+			timer.expires = jiffies + timer_interval;
+			add_timer(&timer);
+		}
 	}
 }
 
@@ -57,6 +60,7 @@ static void nerdbuero_attach (struct parport *port)
 	dev = parport_register_device(port, "nerdbuero_driver", 
 						   NULL/*lp_preempt*/, NULL, NULL, 0,
 							NULL /*(void *) &lp_table[nr]*/);
+	printk("Nerdbueroname:" + dev->name);
 }
 
 /**
