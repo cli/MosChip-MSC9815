@@ -22,8 +22,9 @@ static unsigned char countvalue = 0;
 static void writeValueToParallel(void)
 {
 	int written;
-	written = parport_write(dev->port, &countvalue, 1); // Last param is number of bytes to write
-	printk("nerdbuero: Written byte to parport");
+	//written = parport_write(dev->port, &countvalue, 1); // Last param is number of bytes to write
+	dev->port->ops->write_data(dev->port, countvalue);
+	printk("nerdbuero: Written byte to parport\n");
 }
 
 /**
