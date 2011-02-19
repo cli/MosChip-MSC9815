@@ -18,7 +18,7 @@ static const struct pci_device_id id_table[] =
 		.subvendor   = 0x1000,
 		.subdevice   = 0x0020,
 		.class       = 0x078000,		/* See spec p. 9 */
-		.class_mask  = 0,				/* ? */
+		.class_mask  = 0,
 		.driver_data = 0
 	},
 	{0, }
@@ -63,9 +63,11 @@ static void free_parport(struct mcs9815_port* port)
 	{
 		if(port->port != NULL)
 		{
-			parport_remove_port(port->port); // Does function free port0->port?
-			release_region(port->bar0, BAR_LEN); // What happens if we release the port without owning it?
-			release_region(port->bar1, BAR_LEN);
+			parport_remove_port(port->port); // Does function free port->port?
+			if(port->bar0_alloc == 1)
+				release_region(port->bar0, BAR_LEN);
+			if(port->bar1_alloc == 1)
+				release_region(port->bar1, BAR_LEN);
 		}
 		kfree(port);
 	}
@@ -82,13 +84,17 @@ static int init_parport(struct pci_dev* dev, struct mcs9815_port* port,
 	// Request I/O port regions
 	if(!request_region(port->bar0, BAR_LEN, name))
 	{
+		port->bar0_alloc = 0;
 		return -1;
 	}
+	port->bar0_alloc = 1;
 	
 	if(!request_region(port->bar1, BAR_LEN, name))
 	{
+		port->bar1_alloc = 0;
 		return -2;
 	}
+	port->bar1_alloc = 1;
 
 	// We can adjust the base, irq and dma parameter later in the
 	// parport struct

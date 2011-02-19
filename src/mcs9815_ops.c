@@ -14,6 +14,18 @@ void write_data(struct parport* parport, unsigned char value)
 	outb(value, PORT(parport)->bar0 + REG_EPPDATA);
 }
 
+size_t compat_write_data(struct parport* parport, const void* buf, size_t len, int flags)
+{
+	size_t n;
+	printk("%s: compat_write_data\n", parport->name);
+	
+	for(n = 0; n < len; n++)
+	{
+		write_data(parport, ((unsigned char*)buf)[n]);
+	}
+	return n;
+}
+
 unsigned char read_data(struct parport* parport)
 {
 	printk("%s: read_data\n", parport->name);
@@ -106,8 +118,9 @@ void restore_state(struct parport* parport, struct parport_state* parstate)
 
 struct parport_operations ops =
 {
-	.write_data = write_data,
-	.read_data  = read_data,
+	.write_data        = write_data,
+	.compat_write_data = compat_write_data,
+	.read_data         = read_data,
 	
 	.write_control = write_control,
 	.read_control  = read_control,
