@@ -3,21 +3,21 @@
 #include "mcs9815.h"
 
 extern struct mcs9815_port* port0;
-//extern struct mcs9815_port* port1;
+extern struct mcs9815_port* port1;
 
 #define PORT(p) \
-	/*(p == port0->port ? port0 : port1)*/(port0)
+	(p == port0->port ? port0 : port1)
 
 void write_data(struct parport* parport, unsigned char value)
 {
-	printk("%s: write_data\n", parport->name);
+	printk(KERN_DEBUG "%s: write_data\n", parport->name);
 	outb(value, PORT(parport)->bar0 + REG_EPPDATA);
 }
 
 size_t compat_write_data(struct parport* parport, const void* buf, size_t len, int flags)
 {
 	size_t n;
-	printk("%s: compat_write_data\n", parport->name);
+	printk(KERN_DEBUG "%s: compat_write_data\n", parport->name);
 	
 	for(n = 0; n < len; n++)
 	{
@@ -28,21 +28,21 @@ size_t compat_write_data(struct parport* parport, const void* buf, size_t len, i
 
 unsigned char read_data(struct parport* parport)
 {
-	printk("%s: read_data\n", parport->name);
+	printk(KERN_DEBUG "%s: read_data\n", parport->name);
 	return inb(PORT(parport)->bar0 + REG_DPR);
 }
 
 void write_control(struct parport* parport, unsigned char value)
 {
 	struct mcs9815_port* p = PORT(parport);
-	printk("%s: write_control\n", parport->name);
+	printk(KERN_DEBUG "%s: write_control\n", parport->name);
 	outb(value, p->bar0 + REG_DCR);
 	p->ctrl = value;
 }
 
 unsigned char read_control(struct parport* parport)
 {
-	printk("%s: read_control\n", parport->name);
+	printk(KERN_DEBUG "%s: read_control\n", parport->name);
 	return PORT(parport)->ctrl;
 }
 
@@ -50,7 +50,7 @@ unsigned char frob_control(struct parport* parport, unsigned char mask,
 							unsigned char val)
 {
 	struct mcs9815_port* port = PORT(parport);
-	printk("%s: frob_control\n", parport->name);
+	printk(KERN_DEBUG "%s: frob_control\n", parport->name);
 	
 	// Masking out the bits, xor'ing with val ...
 	port->ctrl = (port->ctrl & mask) ^ val;
@@ -63,13 +63,13 @@ unsigned char frob_control(struct parport* parport, unsigned char mask,
 
 unsigned char read_status(struct parport* parport)
 {
-	printk("%s: read_status\n", parport->name);
+	printk(KERN_DEBUG "%s: read_status\n", parport->name);
 	return inb(PORT(parport)->bar0 + REG_DSR);
 }
 
 void enable_irq(struct parport* parport)
 {
-	printk("%s: enable_irq\n", parport->name);
+	printk(KERN_DEBUG "%s: enable_irq\n", parport->name);
 	
 	// Set bit 4 of control register
 	write_control(parport, read_control(parport) | (1 << 4));
@@ -77,7 +77,7 @@ void enable_irq(struct parport* parport)
 
 void disable_irq(struct parport* parport)
 {
-	printk("%s: disable_irq\n", parport->name);
+	printk(KERN_DEBUG "%s: disable_irq\n", parport->name);
 	
 	// Unset bit 4 of control register
 	write_control(parport, read_control(parport) & (~(1 << 4)));
@@ -85,17 +85,17 @@ void disable_irq(struct parport* parport)
 
 void data_forward(struct parport* parport)
 {
-	printk("%s: data_forward\n", parport->name);
+	printk(KERN_DEBUG "%s: data_forward\n", parport->name);
 }
 
 void data_reverse(struct parport* parport)
 {
-	printk("%s: data_reverse\n", parport->name);
+	printk(KERN_DEBUG "%s: data_reverse\n", parport->name);
 }
 
 void init_state(struct pardevice* pardev, struct parport_state* parstate)
 {
-	printk("mcs9815: init_state\n");
+	printk(KERN_INFO "mcs9815: init_state\n");
 	
 	// Initialize chip (see Master Reset Conditions, p. 12)
 	parstate->u.pc.ctr = 0xc;
@@ -106,14 +106,14 @@ void init_state(struct pardevice* pardev, struct parport_state* parstate)
 
 void save_state(struct parport* parport, struct parport_state* parstate)
 {
-	printk("%s: save_state\n", parport->name);
+	printk(KERN_DEBUG "%s: save_state\n", parport->name);
 	//const struct parport_pc_private* priv = parport->physport->private_data;
 	
 }
 
 void restore_state(struct parport* parport, struct parport_state* parstate)
 {
-	printk("%s: restore_state\n", parport->name);
+	printk(KERN_DEBUG "%s: restore_state\n", parport->name);
 }
 
 struct parport_operations ops =
