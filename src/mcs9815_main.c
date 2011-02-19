@@ -33,7 +33,7 @@ static struct pci_driver mcs9815_pci_driver =
 extern struct parport_operations ops;
 
 struct mcs9815_port* port0 = NULL;
-struct mcs9815_port* port1 = NULL;
+//struct mcs9815_port* port1 = NULL;
 
 // Probes the Base Address Register (BAR) of the given PCI device
 static int probe_bar(struct pci_dev* dev, unsigned long* start, int bar)
@@ -137,7 +137,7 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 		}
 	}
 	
-	port1 = kmalloc(sizeof(struct mcs9815_port), GFP_KERNEL);
+/*	port1 = kmalloc(sizeof(struct mcs9815_port), GFP_KERNEL);
 	if(likely(port1 != NULL))
 	{
 		if(init_parport(dev, port1, "mcs9815-port1", 2, 3) != 0)
@@ -146,9 +146,9 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 			free_parport(port1);
 			port1 = NULL;
 		}
-	}
+	}*/
 
-	if(port0 == NULL && port1 == NULL)
+	if(port0 == NULL/* && port1 == NULL*/)
 	{
 		printk("Initialization of both ports failed -> disabling PCI device\n");
 		pci_disable_device(dev);
@@ -167,7 +167,7 @@ static void pci_remove(struct pci_dev* dev)
 	// Remove parallelport from the parport subsystem and 
 	// free the allocated resources
 	free_parport(port0);
-	free_parport(port1);
+//	free_parport(port1);
 	
 	// Disable PCI device
 	pci_disable_device(dev);

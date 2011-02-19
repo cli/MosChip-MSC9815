@@ -60,7 +60,7 @@ static void nerdbuero_attach (struct parport *port)
 	dev = parport_register_device(port, "nerdbuero_driver", 
 						   NULL/*lp_preempt*/, NULL, NULL, 0,
 							NULL /*(void *) &lp_table[nr]*/);
-	printk("Nerdbueroname:" + dev->name);
+	printk("Nerdbueroname: %s\n", port->name);
 }
 
 /**

@@ -3,10 +3,10 @@
 #include "mcs9815.h"
 
 extern struct mcs9815_port* port0;
-extern struct mcs9815_port* port1;
+//extern struct mcs9815_port* port1;
 
 #define PORT(p) \
-	(p == port0->port ? port0 : port1)
+	/*(p == port0->port ? port0 : port1)*/(port0)
 
 void write_data(struct parport* parport, unsigned char value)
 {
