@@ -9,7 +9,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Nerdbuero Staff");
 
-struct pardevice *dev;
+struct pardevice *dev = NULL;
 static struct timer_list timer;
 static atomic_t running = ATOMIC_INIT(0);
 static int timer_interval = 500;
@@ -22,12 +22,8 @@ static unsigned char countvalue = 0;
 static void writeValueToParallel(void)
 {
 	int written;
-
-	parport_claim_or_block(dev);
-	parport_negotiate(dev->port, IEEE1284_MODE_COMPAT); // COMPAT = COMAPTIBLE = SPP
 	written = parport_write(dev->port, &countvalue, 1); // Last param is number of bytes to write
 	printk("nerdbuero: Written byte to parport");
-	parport_release(dev);
 }
 
 /**
@@ -36,16 +32,14 @@ static void writeValueToParallel(void)
  * */
 static void timer_strobe(unsigned long data)
 {
-	if (dev != NULL)
+	printk("Tick!\n");
+	if (atomic_read(&running) > 0)
 	{
 		countvalue++;
 		writeValueToParallel();
-		
-		if(atomic_read(&running) > 0)
-		{
-			timer.expires = jiffies + timer_interval;
-			add_timer(&timer);
-		}
+
+		timer.expires = jiffies + timer_interval;
+		add_timer(&timer);
 	}
 }
 
@@ -57,10 +51,37 @@ static void nerdbuero_detach (struct parport *port)
  * */
 static void nerdbuero_attach (struct parport *port)
 {
-	dev = parport_register_device(port, "nerdbuero_driver", 
-						   NULL/*lp_preempt*/, NULL, NULL, 0,
-							NULL /*(void *) &lp_table[nr]*/);
-	printk("Nerdbueroname: %s\n", port->name);
+	if(dev == NULL)
+	{
+		dev = parport_register_device(port, "nerdbuero_driver", 
+							   NULL/*lp_preempt*/, NULL, NULL, 0,
+								NULL /*(void *) &lp_table[nr]*/);
+		printk("Nerdbueroname: %s\n", port->name);
+		if(dev == NULL)
+		{
+			printk("Cannot register parport device!\n");
+			return;
+		}
+		printk("Device registered\n");
+		
+		if(parport_claim(dev) != 0)
+		{
+			printk("Cannot claim device!\n");
+			return;
+		}
+		printk("Parport claimed\n");
+		
+		parport_negotiate(dev->port, IEEE1284_MODE_COMPAT); // COMPAT = COMAPTIBLE = SPP
+		
+		atomic_set(&running, 1);
+		
+		// Initialize timer
+		init_timer(&timer);
+		timer.expires = jiffies + timer_interval;
+		timer.data = 0;
+		timer.function = timer_strobe;
+		add_timer(&timer);
+	}
 }
 
 /**
@@ -83,13 +104,6 @@ static int __init parport_init(void)
 		return -EIO;
 	}
 
-	// Initialize timer
-	init_timer(&timer);
-	timer.expires = jiffies + timer_interval;
-	timer.data = 0;
-	timer.function = timer_strobe;
-	add_timer(&timer);
-
 	printk("Parport module loaded.\n");
 	return 0;
 }
@@ -97,7 +111,6 @@ static int __init parport_init(void)
 static void __exit parport_exit(void)
 {
 	printk("Parport module unloading...\n");
-        
 	atomic_set(&running, 0);
 	del_timer_sync(&timer);
 	parport_release (dev);
