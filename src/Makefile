@@ -2,7 +2,7 @@ ifneq ($(KERNELRELEASE),)
 # Wenn die make-Variable "KERNELRELEASE" definiert ist,
 # wurde dieses Makefile vom Kernel-Build-System aufgerufen.
 # Dann reicht die folgende Zeile aus, um das Modul zu bauen.
-obj-m    := mcs9815.o
+obj-m    := mcs9815.o highlevel_driver.o
 mcs9815-objs := mcs9815_main.o mcs9815_ops.o
 else
 # Hierher kommt man, wenn make direkt aus dem
