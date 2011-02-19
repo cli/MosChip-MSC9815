@@ -23,6 +23,8 @@ struct mcs9815_port
 	// Every port uses two BARs as I/O ports
 	unsigned long bar0;	// Standard parallel port register
 	unsigned long bar1;	// Conf register / ECR register
+	unsigned int bar0_alloc : 1;
+	unsigned int bar1_alloc : 1;
 	
 	// Cached control registers 
 	unsigned int ctrl;
