@@ -131,14 +131,14 @@ Die Parallelportschnittstelle ist wesentlich durch den IEEE 1284-Standard geprä
  \end{tabular}
 
 
-Um die einzelnen Pins mit Signalen zu belegen, sind drei Speicherbereiche (Ports) für die Behandlung der LPT-Schnittstelle im Rechner vorgesehen.  \\\\
- \begin{tabular}{|c|c|c|c|}
- \hline
-\multicolumn{3}{|l|}{Portadresse}	&	Funktion\\  \hline 
-278	&	378	&	3BC	&	Datenport \\  \hline 
-279	&	379	&	3BD	&	Statusport \\  \hline 
-27A	&	37A	&	3BE	&	Steuerport \\  \hline 
- \end{tabular} 
+%Um die einzelnen Pins mit Signalen zu belegen, sind drei Speicherbereiche (Ports) für die Behandlung der LPT-Schnittstelle im Rechner vorgesehen.  \\\\
+% \begin{tabular}{|c|c|c|c|}
+% \hline
+%\multicolumn{3}{|l|}{Portadresse}	&	Funktion\\  \hline 
+%278	&	378	&	3BC	&	Datenport \\  \hline 
+%279	&	379	&	3BD	&	Statusport \\  \hline 
+%27A	&	37A	&	3BE	&	Steuerport \\  \hline 
+% \end{tabular} 
  
 In der Regel werden die Bereiche 278-27A und 378-37A verwendet. Der \textbf{Datenport} ist ein 8-Bit-Ausgagsport, der den Datenleitungen der parallelen Schnittstelle entspricht.  Der \textbf{Steuerport} setzt sich aus  Strobe, Auto-Feed, Reset, Select printer, IRC7 enable und Direction zusammen. 
  \begin{tabular}{|c|c|c|c|}
@@ -151,6 +151,24 @@ Bit	&	Funktion		&	Pegel  \\ \hline
 4	&	IRQ7 enable	&	1\\ \hline
 5	&	Direction	&	1\\ \hline
  \end{tabular} 
+
+\section{Der MosChip MCS9815 Controller}
+
+Der MCS9815 ist ein Parallelport Controller Chip der Firma MosChip. Er kann
+zwei Parallelports über das PCI Interface an das System anbinden und unterstützt alle
+aktuellen Modi (SPP, PS2, EPP, ECP) der Parallelschnittstelle (vgl. Abb ?).
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[bb=0 0 724 671,scale=0.5]{./pics/mcs9815_block_diagram.png}
+ \caption{Blockdiagramm des MosChip MCS9815}
+\end{figure}
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[scale=0.5]{./pics/mcs9815_ioports.png}
+ \caption{Portkonfiguration des MosChip MCS9815}
+\end{figure}
 
 \section{Parport-Treiber in Linux}
 
@@ -169,6 +187,8 @@ Funktionen für den Zugriff auf Basisfunktionen des Ports bereit (vgl. \cite{net
 
 Aufgabe dieser Hausarbeit ist es, einen Lowlevel-Treiber für einen speziellen Parallelport-Controller zu schreiben. Diese 
 Funktionalität ist normalerweise im architekturspezifischen Modul \verb|parport_pc| integriert.
+
+%% BILD
 
 \subsection{Strukturen}
 
@@ -670,23 +690,7 @@ long parport_set_timeout (struct pardevice *dev, long inactivity)
 \end{verbatim}
 
 
-\section{Der MosChip MCS9815 Controller}
-
-Der MCS9815 ist ein Parallelport Controller Chip der Firma MosChip. Er kann
-zwei Parallelports über das PCI Interface an das System anbinden und unterstützt alle
-aktuellen Modi (SPP, PS2, EPP, ECP) der Parallelschnittstelle (vgl. Abb ?).
-
-\begin{figure}[h]
- \centering
- \includegraphics[bb=0 0 724 671,scale=0.5]{./pics/mcs9815_block_diagram.png}
- \caption{Blockdiagramm des MosChip MCS9815}
-\end{figure}
-
-\begin{figure}[h]
- \centering
- \includegraphics[scale=0.5]{./pics/mcs9815_ioports.png}
- \caption{Portkonfiguration des MosChip MCS9815}
-\end{figure}
+\section{Fazit}
 
 \bibliography{literatur}
 
