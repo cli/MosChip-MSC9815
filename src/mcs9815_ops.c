@@ -8,89 +8,108 @@ extern struct mcs9815_port* port1;
 #define PORT(p) \
 	(p == port0->port ? port0 : port1)
 
-void write_data(struct parport* parport, unsigned char value)
+void write_data(struct parport* port, unsigned char value)
 {
-	printk(KERN_DEBUG "%s: write_data\n", parport->name);
-	outb(value, PORT(parport)->bar0 + REG_EPPDATA);
+	printk(KERN_DEBUG "%s: write_data\n", port->name);
+	outb(value, PORT(port)->bar0 + REG_EPPDATA);
 }
 
-size_t compat_write_data(struct parport* parport, const void* buf, size_t len, int flags)
+size_t compat_write_data(struct parport* port, const void* buf, size_t len, int flags)
 {
 	size_t n;
-	printk(KERN_DEBUG "%s: compat_write_data\n", parport->name);
+	printk(KERN_DEBUG "%s: compat_write_data\n", port->name);
 	
 	for(n = 0; n < len; n++)
 	{
-		write_data(parport, ((unsigned char*)buf)[n]);
+		write_data(port, ((unsigned char*)buf)[n]);
 	}
 	return n;
 }
 
-unsigned char read_data(struct parport* parport)
+unsigned char read_data(struct parport* port)
 {
-	printk(KERN_DEBUG "%s: read_data\n", parport->name);
-	return inb(PORT(parport)->bar0 + REG_DPR);
+	printk(KERN_DEBUG "%s: read_data\n", port->name);
+	return inb(PORT(port)->bar0 + REG_DPR);
 }
 
-void write_control(struct parport* parport, unsigned char value)
+void write_control(struct parport* port, unsigned char value)
 {
-	struct mcs9815_port* p = PORT(parport);
-	printk(KERN_DEBUG "%s: write_control\n", parport->name);
+	struct mcs9815_port* p = PORT(port);
+	printk(KERN_DEBUG "%s: write_control\n", port->name);
 	outb(value, p->bar0 + REG_DCR);
 	p->ctrl = value;
 }
 
-unsigned char read_control(struct parport* parport)
+unsigned char read_control(struct parport* port)
 {
-	printk(KERN_DEBUG "%s: read_control\n", parport->name);
-	return PORT(parport)->ctrl;
+	printk(KERN_DEBUG "%s: read_control\n", port->name);
+	return PORT(port)->ctrl;
 }
 
-unsigned char frob_control(struct parport* parport, unsigned char mask,
+unsigned char frob_control(struct parport* port, unsigned char mask,
 							unsigned char val)
 {
-	struct mcs9815_port* port = PORT(parport);
-	printk(KERN_DEBUG "%s: frob_control\n", parport->name);
+	struct mcs9815_port* p = PORT(port);
+	printk(KERN_DEBUG "%s: frob_control\n", port->name);
 	
 	// Masking out the bits, xor'ing with val ...
-	port->ctrl = (port->ctrl & mask) ^ val;
+	p->ctrl = (p->ctrl & ~mask) ^ val;
 	
 	// ... and write the result to control register
-	write_control(parport, port->ctrl);
+	write_control(port, p->ctrl);
 	
-	return port->ctrl;
+	return p->ctrl;
 }
 
-unsigned char read_status(struct parport* parport)
+unsigned char read_status(struct parport* port)
 {
-	printk(KERN_DEBUG "%s: read_status\n", parport->name);
-	return inb(PORT(parport)->bar0 + REG_DSR);
+	printk(KERN_DEBUG "%s: read_status\n", port->name);
+	return inb(PORT(port)->bar0 + REG_DSR);
 }
 
-void enable_irq(struct parport* parport)
+size_t nibble_read_data(struct parport* port, void* buf, size_t len, int flags)
 {
-	printk(KERN_DEBUG "%s: enable_irq\n", parport->name);
+	int n;
+	printk(KERN_DEBUG "%s: nibble_read_data\n", port->name);	
+	for(n = 0; n < len; n++)
+	{
+		((unsigned char*)buf)[n] = read_status(port);
+	}
+	return n;
+}
+
+void enable_irq(struct parport* port)
+{
+	printk(KERN_DEBUG "%s: enable_irq\n", port->name);
 	
 	// Set bit 4 of control register
-	write_control(parport, read_control(parport) | (1 << 4));
+	frob_control(port, (1 << 4), (1 << 4));
 }
 
-void disable_irq(struct parport* parport)
+void disable_irq(struct parport* port)
 {
-	printk(KERN_DEBUG "%s: disable_irq\n", parport->name);
+	printk(KERN_DEBUG "%s: disable_irq\n", port->name);
 	
-	// Unset bit 4 of control register
-	write_control(parport, read_control(parport) & (~(1 << 4)));
+	// Clear bit 4 of control register
+	frob_control(port, (1 << 4), 0);
 }
 
-void data_forward(struct parport* parport)
+// This sets the data direction to forward (which is default for SPP)
+void data_forward(struct parport* port)
 {
-	printk(KERN_DEBUG "%s: data_forward\n", parport->name);
+	printk(KERN_DEBUG "%s: data_forward\n", port->name);
+	
+	// Clear bit 5 of control register
+	frob_control(port, (1 << 5), 0);
 }
 
-void data_reverse(struct parport* parport)
+// Reverses the data direction (required for byte transfer mode)
+void data_reverse(struct parport* port)
 {
-	printk(KERN_DEBUG "%s: data_reverse\n", parport->name);
+	printk(KERN_DEBUG "%s: data_reverse\n", port->name);
+	
+	// Set bit 5 of control register
+	frob_control(port, (1 << 5), (1 << 5));
 }
 
 void init_state(struct pardevice* pardev, struct parport_state* parstate)
@@ -116,11 +135,56 @@ void restore_state(struct parport* parport, struct parport_state* parstate)
 	printk(KERN_DEBUG "%s: restore_state\n", parport->name);
 }
 
+size_t epp_write_data(struct parport* port, const void* buf, size_t len, int flags)
+{
+	int n;
+	printk(KERN_DEBUG "%s: epp_write_data\n", port->name);
+	for(n = 0; n < len; n++)
+	{
+		outb(PORT(port)->bar0 + REG_EPPDATA, ((unsigned char*)buf)[n]);
+	}
+	return len;
+}
+
+size_t epp_write_addr(struct parport* port, const void* buf, size_t len, int flags)
+{
+	int n;
+	printk(KERN_DEBUG "%s: epp_write_addr\n", port->name);
+	for(n = 0; n < len; n++)
+	{
+		outb(PORT(port)->bar0 + REG_EPPADDR, ((unsigned char*)buf)[n]);
+	}
+	return len;
+}
+
+size_t epp_read_data(struct parport* port, void* buf, size_t len, int flags)
+{
+	int n;
+	printk(KERN_DEBUG "%s: epp_read_data\n", port->name);
+	for(n = 0; n < len; n++)
+	{
+		((unsigned char*)buf)[n] = inb(PORT(port)->bar0 + REG_EPPDATA);
+	}
+	return len;
+}
+
+size_t epp_read_addr(struct parport* port, void* buf, size_t len, int flags)
+{
+	int n;
+	printk(KERN_DEBUG "%s: epp_read_addr\n", port->name);
+	for(n = 0; n < len; n++)
+	{
+		((unsigned char*)buf)[n] = inb(PORT(port)->bar0 + REG_EPPADDR);
+	}
+	return len;
+}
+
 struct parport_operations ops =
 {
 	.write_data        = write_data,
 	.compat_write_data = compat_write_data,
 	.read_data         = read_data,
+	.nibble_read_data  = nibble_read_data,
 	
 	.write_control = write_control,
 	.read_control  = read_control,
@@ -137,6 +201,11 @@ struct parport_operations ops =
 	.init_state    = init_state,
 	.save_state    = save_state,
 	.restore_state = restore_state,
+	
+	.epp_write_data = epp_write_data,
+	.epp_write_addr = epp_write_addr,
+	.epp_read_data  = epp_read_data,
+	.epp_read_addr  = epp_read_addr,
 
 	.owner = THIS_MODULE,
 };
