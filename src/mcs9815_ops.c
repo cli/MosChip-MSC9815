@@ -11,7 +11,7 @@ extern struct mcs9815_port* port1;
 void write_data(struct parport* port, unsigned char value)
 {
 	printk(KERN_DEBUG "%s: write_data\n", port->name);
-	outb(value, PORT(port)->bar0 + REG_EPPDATA);
+	outb(value, REG_EPPDATA(PORT(port)));
 }
 
 size_t compat_write_data(struct parport* port, const void* buf, size_t len, int flags)
@@ -29,14 +29,14 @@ size_t compat_write_data(struct parport* port, const void* buf, size_t len, int 
 unsigned char read_data(struct parport* port)
 {
 	printk(KERN_DEBUG "%s: read_data\n", port->name);
-	return inb(PORT(port)->bar0 + REG_DPR);
+	return inb(REG_DPR(PORT(port)));
 }
 
 void write_control(struct parport* port, unsigned char value)
 {
 	struct mcs9815_port* p = PORT(port);
 	printk(KERN_DEBUG "%s: write_control\n", port->name);
-	outb(value, p->bar0 + REG_DCR);
+	outb(value, REG_DCR(p));
 	p->ctrl = value;
 }
 
@@ -64,7 +64,7 @@ unsigned char frob_control(struct parport* port, unsigned char mask,
 unsigned char read_status(struct parport* port)
 {
 	printk(KERN_DEBUG "%s: read_status\n", port->name);
-	return inb(PORT(port)->bar0 + REG_DSR);
+	return inb(REG_DSR(PORT(port)));
 }
 
 size_t nibble_read_data(struct parport* port, void* buf, size_t len, int flags)
@@ -76,6 +76,11 @@ size_t nibble_read_data(struct parport* port, void* buf, size_t len, int flags)
 		((unsigned char*)buf)[n] = read_status(port);
 	}
 	return n;
+}
+
+size_t byte_read_data(struct parport *port, void* buf, size_t len, int flags)
+{
+	printk(KERN_DEBUG "%s: byte_read_data\n");
 }
 
 void enable_irq(struct parport* port)
@@ -141,7 +146,7 @@ size_t epp_write_data(struct parport* port, const void* buf, size_t len, int fla
 	printk(KERN_DEBUG "%s: epp_write_data\n", port->name);
 	for(n = 0; n < len; n++)
 	{
-		outb(PORT(port)->bar0 + REG_EPPDATA, ((unsigned char*)buf)[n]);
+		outb(REG_EPPDATA(PORT(port)), ((unsigned char*)buf)[n]);
 	}
 	return len;
 }
@@ -152,7 +157,7 @@ size_t epp_write_addr(struct parport* port, const void* buf, size_t len, int fla
 	printk(KERN_DEBUG "%s: epp_write_addr\n", port->name);
 	for(n = 0; n < len; n++)
 	{
-		outb(PORT(port)->bar0 + REG_EPPADDR, ((unsigned char*)buf)[n]);
+		outb(REG_EPPADDR(PORT(port)), ((unsigned char*)buf)[n]);
 	}
 	return len;
 }
@@ -163,7 +168,7 @@ size_t epp_read_data(struct parport* port, void* buf, size_t len, int flags)
 	printk(KERN_DEBUG "%s: epp_read_data\n", port->name);
 	for(n = 0; n < len; n++)
 	{
-		((unsigned char*)buf)[n] = inb(PORT(port)->bar0 + REG_EPPDATA);
+		((unsigned char*)buf)[n] = inb(REG_EPPDATA(PORT(port)));
 	}
 	return len;
 }
@@ -174,9 +179,32 @@ size_t epp_read_addr(struct parport* port, void* buf, size_t len, int flags)
 	printk(KERN_DEBUG "%s: epp_read_addr\n", port->name);
 	for(n = 0; n < len; n++)
 	{
-		((unsigned char*)buf)[n] = inb(PORT(port)->bar0 + REG_EPPADDR);
+		((unsigned char*)buf)[n] = inb(REG_EPPADDR(PORT(port)));
 	}
 	return len;
+}
+
+size_t ecp_write_data(struct parport* port, const void* buf, size_t len, int flags)
+{
+	size_t n;
+	struct mcs9815_port* p = PORT(port);
+	n = 0;
+	
+	// While FIFO is not full write data to it
+	while((inb(REG_ECR(p)) & MASK_FIFO_FULL) == 0 && n < len)
+	{
+		outb(REG_CFIFO(p), buf[n]);
+	}
+	
+	return n;
+}
+
+size_t ecp_read_data(struct parport* port, void* buf, size_t len, int flags)
+{
+}
+
+size_t ecp_write_addr(struct parport* port, const void* buf, size_t len, int flags)
+{
 }
 
 struct parport_operations ops =
@@ -185,6 +213,7 @@ struct parport_operations ops =
 	.compat_write_data = compat_write_data,
 	.read_data         = read_data,
 	.nibble_read_data  = nibble_read_data,
+	.byte_read_data    = byte_read_data,
 	
 	.write_control = write_control,
 	.read_control  = read_control,
@@ -206,6 +235,10 @@ struct parport_operations ops =
 	.epp_write_addr = epp_write_addr,
 	.epp_read_data  = epp_read_data,
 	.epp_read_addr  = epp_read_addr,
+	
+	.ecp_write_data = ecp_write_data,
+	.ecp_read_data  = ecp_read_data,
+	.ecp_write_addr = ecp_write_addr,
 
 	.owner = THIS_MODULE,
 };

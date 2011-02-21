@@ -6,15 +6,18 @@
 
 #define BAR_LEN 8
 
-// Chip register offsets
-#define REG_DPR 0
-#define REG_DSR 1
-#define REG_DCR 2
-#define REG_EPPADDR 3
-#define REG_EPPDATA 4
-#define REG_CFIFO 0
-#define REG_CONFB 1
-#define REG_ECR 2
+// Chip register ports
+#define REG_DPR(port)		(port->bar0 + 0)
+#define REG_DSR(port)		(port->bar0 + 1)
+#define REG_DCR(port)		(port->bar0 + 2)
+#define REG_EPPADDR(port)	(port->bar0 + 3)
+#define REG_EPPDATA(port)	(port->bar0 + 4)
+#define REG_CFIFO(port)		(port->bar1 + 0)
+#define REG_CONFB(port)		(port->bar1 + 1)
+#define REG_ECR(port)		(port->bar1 + 2)
+
+#define MASK_FIFO_EMPTY	0	// Bit 0 of REG_ECR
+#define MASK_FIFO_FULL	2	// Bit 1 of REG_ECR
 
 struct mcs9815_port
 {
