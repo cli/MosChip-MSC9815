@@ -78,9 +78,16 @@ size_t nibble_read_data(struct parport* port, void* buf, size_t len, int flags)
 	return n;
 }
 
-size_t byte_read_data(struct parport *port, void* buf, size_t len, int flags)
+size_t byte_read_data(struct parport* port, void* buf, size_t len, int flags)
 {
+	size_t n;
+	struct mcs9815_port* p = PORT(port);
 	printk(KERN_DEBUG "%s: byte_read_data\n");
+	for(n = 0; n < len; n++)
+	{
+		((unsigned char*)buf)[n] = inb(REG_DPR(p));
+	}
+	return n;
 }
 
 void enable_irq(struct parport* port)
@@ -194,6 +201,7 @@ size_t ecp_write_data(struct parport* port, const void* buf, size_t len, int fla
 	while((inb(REG_ECR(p)) & MASK_FIFO_FULL) == 0 && n < len)
 	{
 		outb(REG_CFIFO(p), buf[n]);
+		n++;
 	}
 	
 	return n;
@@ -201,6 +209,16 @@ size_t ecp_write_data(struct parport* port, const void* buf, size_t len, int fla
 
 size_t ecp_read_data(struct parport* port, void* buf, size_t len, int flags)
 {
+	size_t n;
+	struct mcs9815_port* p = PORT(port);
+	
+	// Read from FIFO until it is empty
+	while((inb(REG_ECR(p)) & MASK_FIFO_EMPTY) == 0 && n < len)
+	{
+		((unsigned char*)buf)[n] = inb(REG_CFIFO(p));
+		n++;
+	}
+	return n;
 }
 
 size_t ecp_write_addr(struct parport* port, const void* buf, size_t len, int flags)
