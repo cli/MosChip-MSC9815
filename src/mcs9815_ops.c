@@ -210,6 +210,9 @@ size_t epp_write_data(struct parport* port, const void* buf, size_t len, int fla
 	return len;
 }
 
+/*
+ * Writes up to len bytes to the specified port using EPP address registers.
+ */
 size_t epp_write_addr(struct parport* port, const void* buf, size_t len, int flags)
 {
 	int n;
@@ -221,6 +224,9 @@ size_t epp_write_addr(struct parport* port, const void* buf, size_t len, int fla
 	return len;
 }
 
+/*
+ * Reads up to len bytes into the given buffer from the EPP data registers.
+ */
 size_t epp_read_data(struct parport* port, void* buf, size_t len, int flags)
 {
 	int n;
@@ -232,6 +238,9 @@ size_t epp_read_data(struct parport* port, void* buf, size_t len, int flags)
 	return len;
 }
 
+/*
+ * Reads up to len bytes into the given
+ */
 size_t epp_read_addr(struct parport* port, void* buf, size_t len, int flags)
 {
 	int n;
