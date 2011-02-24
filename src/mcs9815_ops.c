@@ -129,7 +129,7 @@ size_t byte_read_data(struct parport* port, void* buf, size_t len, int flags)
 {
 	size_t n;
 	struct mcs9815_port* p = PORT(port);
-	printk(KERN_DEBUG "%s: byte_read_data\n");
+	printk(KERN_DEBUG "%s: byte_read_data\n", port->name);
 	for(n = 0; n < len; n++)
 	{
 		((unsigned char*)buf)[n] = inb(REG_DPR(p));
@@ -282,7 +282,7 @@ size_t ecp_write_data(struct parport* port, const void* buf, size_t len, int fla
 	// While FIFO is not full write data to it
 	while((inb(REG_ECR(p)) & MASK_FIFO_FULL) == 0 && n < len)
 	{
-		outb(REG_CFIFO(p), buf[n]);
+		outb(REG_CFIFO(p), ((unsigned char*)buf)[n]);
 		n++;
 	}
 	
@@ -297,6 +297,7 @@ size_t ecp_read_data(struct parport* port, void* buf, size_t len, int flags)
 {
 	size_t n;
 	struct mcs9815_port* p = PORT(port);
+	n = 0;
 	
 	// Read from FIFO until it is empty
 	while((inb(REG_ECR(p)) & MASK_FIFO_EMPTY) == 0 && n < len)
@@ -309,7 +310,8 @@ size_t ecp_read_data(struct parport* port, void* buf, size_t len, int flags)
 
 size_t ecp_write_addr(struct parport* port, const void* buf, size_t len, int flags)
 {
-	// Not implemented 
+	// Not implemented
+	return 0;
 }
 
 struct parport_operations ops =
