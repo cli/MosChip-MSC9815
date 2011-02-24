@@ -91,15 +91,33 @@ unsigned char read_status(struct parport* port)
 
 /*
  * Reads up to len bytes into the given buffer using parport nibble 
- * mode (reading status register).
+ * mode. A byte is constructed of two half-byte (nibbles) which are
+ * received via the status register.
+ * 
+ * The bit usage for nibble mode:
+ * BUSY        Bit-7/3     
+ * PE          Bit-6/2
+ * SLCT        Bit-5/1
+ * nFAULT      Bit-4/0
  */
 size_t nibble_read_data(struct parport* port, void* buf, size_t len, int flags)
 {
 	int n;
+	unsigned char s1, s2;
+
 	printk(KERN_DEBUG "%s: nibble_read_data\n", port->name);	
+
 	for(n = 0; n < len; n++)
 	{
-		((unsigned char*)buf)[n] = read_status(port);
+		// We use bits 3, 4, 5, 7 to construct a nibble
+		s1 = read_status(port);
+		s2 = read_status(port);
+		
+		// I think we have to invert the BUSY bit
+		s1 = ((s1 >> 3) & 7) | (8 ^ ((s1 >> 4) & 8));
+		s2 = ((s2 >> 3) & 7) | (8 ^ ((s2 >> 4) & 8));
+		
+		((unsigned char*)buf)[n] = (s2 << 4) | s1;
 	}
 	return n;
 }
@@ -239,7 +257,7 @@ size_t epp_read_data(struct parport* port, void* buf, size_t len, int flags)
 }
 
 /*
- * Reads up to len bytes into the given
+ * Reads up to len bytes into the given buffer off the EPP address registers.
  */
 size_t epp_read_addr(struct parport* port, void* buf, size_t len, int flags)
 {
@@ -252,6 +270,9 @@ size_t epp_read_addr(struct parport* port, void* buf, size_t len, int flags)
 	return len;
 }
 
+/* 
+ * Writes up to len bytes into the chip's FIFO until the FIFO is full.
+ */
 size_t ecp_write_data(struct parport* port, const void* buf, size_t len, int flags)
 {
 	size_t n;
@@ -268,6 +289,10 @@ size_t ecp_write_data(struct parport* port, const void* buf, size_t len, int fla
 	return n;
 }
 
+/*
+ * Reads up to len bytes from the chip's FIFO into the given buffer
+ * as long as the FIFO is not empty.
+ */
 size_t ecp_read_data(struct parport* port, void* buf, size_t len, int flags)
 {
 	size_t n;
