@@ -19,17 +19,18 @@ static unsigned char countvalue = 0;
 // Increments the counter and writes it to parallelport
 static void timer_strobe(unsigned long data)
 {
-	int written;
 	printk(KERN_DEBUG "hldrv: Tick!\n");
 	if (atomic_read(&running) > 0)
 	{
 		countvalue++;
 	        // Writes the countvalue into our port
-       		written = parport_write(dev->port, &countvalue, 1);
-        	// Alternative: dev->port->ops->write_data(dev->port, countvalue);
-        	// This method is probably faster as parport_write has an additional
-        	// call to compat_write_data() in between, but parport_write()
-        	// is more high-level...
+        	dev->port->ops->write_data(dev->port, countvalue);
+        	// Alternative:
+		// written = parport_write(dev->port, &countvalue, 1);
+		// dev->port->ops->write_data is  probably faster as parport_write 
+		// has an additional call to compat_write_data() in between. 
+		// Additionally parport_write() only works with our mcs9815 
+		// driver and freezes with the default parport_pc driver...
 
 		timer.expires = jiffies + timer_interval;
 		add_timer(&timer);
