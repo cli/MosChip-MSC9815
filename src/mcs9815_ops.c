@@ -309,6 +309,7 @@ size_t ecp_read_data(struct parport* port, void* buf, size_t len, int flags)
 
 size_t ecp_write_addr(struct parport* port, const void* buf, size_t len, int flags)
 {
+	// Not implemented 
 }
 
 struct parport_operations ops =

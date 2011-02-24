@@ -12,10 +12,11 @@
 \usepackage{color}
 \usepackage{array}
 \usepackage{hhline}
-\usepackage{hyperref}
+%\usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{tabularx}
-\hypersetup{pdftex, colorlinks=true, linkcolor=blue, citecolor=blue, filecolor=blue, urlcolor=blue, pdftitle=, pdfauthor=, pdfsubject=, pdfkeywords=}
+%\hypersetup{pdftex, colorlinks=true, linkcolor=blue, citecolor=blue, filecolor=blue, urlcolor=blue, pdftitle=, pdfauthor=, pdfsubject=, pdfkeywords=}
+\usepackage{url}
 % Text styles
 \newcommand\textstyleSourceText[1]{\texttt{#1}}
 % Outline numbering
@@ -33,9 +34,9 @@
 \setlength\hoffset{-1in}
 \setlength\topmargin{2cm}
 \setlength\oddsidemargin{2cm}
-\setlength\textheight{25.699cm}
+\setlength\textheight{25.6cm}
 \setlength\textwidth{16.999cm}
-\setlength\footskip{0.0cm}
+\setlength\footskip{1.0cm}
 \setlength\headheight{0cm}
 \setlength\headsep{0cm}
 % Footnote rule
@@ -67,10 +68,10 @@ Im Rahmen der Lehrveranstaltung \textit{Hardwarenahe System- und Treiberprogramm
 \section{Einleitung}
 
 Eine weit verbreitete Schnittstelle in PC-Systemen zum Datenaustausch mit Peripheriegeräten stellte über Jahre hinweg die Centronics-Schnittstelle dar. Ursprünglich wurde sie bereits Ende der 1960er Jahre entwickelt. Die Druckerfirma Centronics nutze sie zunächst für die Kommunikation mit den eigenen hergestellten Druckern, im Laufe der Zeit setzten aber auch viele andere Firmen (wie IBM) auf die Schnittstelle. Obwohl Centronics die Spezifikationen offenlegte, zeigten sich oftmals in den Implementierungen anderer Hersteller kleinere Inkompatibilitäten, die sich in gewissen Details äußerten.Trotz dieser kleineren Probleme entwickelte sich die Centronics-Schnittstelle zu einem Quasi-Standard zum Ansprechen von Druckern und anderer Peripherie. Von der IEEE wurde 1994 der Standard IEEE 1284 verabschiedet, der als \textit{parallele Schnittstelle} die Centronics-Schnittstelle ablöste, aber dennoch kompatibel zum alten \textit{Centronics-Standard} blieb. 
-\begin{figure}[h]
+\begin{figure}[h!]
  \centering
  \includegraphics[scale=0.5]{./pics/IEEE1284Printercable_2007_04.jpg}
-	\caption{IEEE 1284-Druckerkabel (Typ AB)} 	
+ \caption{IEEE 1284-Druckerkabel (Typ AB)} 	
 \end{figure}
 Der IEEE-Standard definiert die elektrischen Eigenschaften der Schnittstellen, die zu verwendenden Hardwareprotokolle und die zugehörigen Kabel. Für softwareseitige Protokolle wird auf Substandards verwiesen, die u.a. auch unabhängig von der eigentlichen Hardware agieren können. Heutzutage ist die parallele Schnittstelle (LPT) größtenteils durch modernere Schnittstellen, wie USB, ersetzt worden und erfährt nicht mehr die gleiche Bedeutung wie noch in den 1990er Jahren. 
 
@@ -88,20 +89,20 @@ Als Hardwareziel kommt eine PCI-Karte der Firma Exsys Inc (http://www.exsys.com)
 
 Die Parallelportschnittstelle ist wesentlich durch den IEEE 1284-Standard geprägt und definiert drei mögliche Steckertypen. Auf PC-Seite findet sich ein 25-poliger D-SUB.Stecker, der 1981 von IBM im PC eingeführt wurde (\textbf{Typ A}). Die 36-polige Centronics-Schnittstelle stellt den Stecker vom \textbf{Typ B} dar. Als Mini-Centronics werden Stecker vom \textbf{Typ C} bezeichnet, die ebenfalls über 36 Pole verfügen, aber deutlich kompakter daherkommen als übliche Centronics-Stecker. 
 
-\begin{figure}[h]
+\begin{figure}[h!]
  \centering
  \includegraphics{./pics/ieee1284_types.jpg}
-	\caption{Alle IEEE 1284-Steckertypen im Vergleich} 	
+ \caption{Alle IEEE 1284-Steckertypen im Vergleich} 	
 \end{figure}
 
 
 Üblicherweise wurden bei der häufig vorkommenden Verbindung zwischen PC und Drucker Kabel vom Typ AB eingesetzt. Dabei muss ein Mapping vom 25-poligen Typ A-Anschluss zum 36-poligen Typ-B-Anschluss vorgenommen werden (siehe Abbildung).  
 
 
-\begin{figure}[h]
+\begin{figure}[h!]
  \centering
  \includegraphics[scale=0.7]{./pics/ieee1284_pinbelegungAB.png}
-	\caption{Pinbelegung und -Verdrahtung bei üblichen Druckerkabeln} 	
+ \caption{Pinbelegung und -Verdrahtung bei üblichen Druckerkabeln} 	
 \end{figure} 
 
  
@@ -156,28 +157,39 @@ Bit	&	Funktion		&	Pegel  \\ \hline
 
 Der MCS9815 ist ein Parallelport Controller Chip der Firma MosChip. Er kann
 zwei Parallelports über das PCI Interface an das System anbinden und unterstützt alle
-aktuellen Modi (SPP, PS2, EPP, ECP) der Parallelschnittstelle (vgl. Abb ?).
+aktuellen Modi (SPP, PS2, EPP, ECP) der Parallelschnittstelle (vgl. Abbildung \ref{fig:blockdiagramm_mcs9815}).
 
-\begin{figure}[h]
+\begin{figure}[h!]
  \centering
  \includegraphics[bb=0 0 724 671,scale=0.5]{./pics/mcs9815_block_diagram.png}
  \caption{Blockdiagramm des MosChip MCS9815}
+ \label{fig:blockdiagramm_mcs9815}
 \end{figure}
 
-\begin{figure}[h]
- \centering
- \includegraphics[scale=0.5]{./pics/mcs9815_ioports.png}
- \caption{Portkonfiguration des MosChip MCS9815}
-\end{figure}
+Einschränkungen des Chips ist die fehlende RLE-Kompression der Daten im ECP-Modus. Da dieser Modus aber
+in der Praxis selten verwendet wird, ist diese Einschränkungen zu vernachlässigen.
+Auch DMA (Direct-Memory-Access) unterstützt der Baustein nicht. Diese Informationen lassen sich dem Config-B Registers des
+Chips entnehmen (oder auch dem Spezifikationsdokument des Chips \cite{net:3}).
+Die aufwändige Handshaking beim EPP-Modus kann die der MCS9815 in der Hardware abhandeln.
 
 \section{Parport-Treiber in Linux}
+
+\subsection{Aufbau des parport-Subsystems}
 
 Da die Parallelportschnittstelle aus der Steinzeit der PC-Entwicklung stammt, ist die Unterstützung
 dafür im Linux-Kernel sehr gut. 
 Das \verb|parport| Subsystem besteht im Wesentlichen aus zwei Teilbereichen, einem abstrakteren Highlevel-System, das
 die IEEE 1284 Kommunikation beherrscht und einem Lowlevel-System, was den Hardwarezugriff auf die einzelnen Ports
 kontrolliert. Auf einem PC stellt das Modul \verb|parport_pc| den architekturspezifischen Teil bereit, das Modul \verb|parport| 
-den generischen Teil (vgl. \cite{net:1}).
+den generischen Teil (vgl. \cite{net:1} und Abbildung \ref{fig:parport_struktur}).
+
+\begin{figure}[h!]
+ \centering
+ \includegraphics[scale=0.7,bb=0 0 493 380]{./pics/parport_struktur.png}
+ \caption{Das parport-Modul stellt eine abstrakte Schnittstelle für Gerätetreiber bereit, die Brücke zur Hardware schlagen Architektur- und Hardware-
+spezifische Treibermodule}
+\label{fig:parport_struktur}
+\end{figure}
 
 Der hardwarespezifische Treiber registriert einen \emph{Port}\footnote{Port ist hier die logische Parallelschnittstelle, nicht zu verwechseln
 mit dem I/O-Port (z.B. 0x378), der im PC für den Zugriff auf die Parallelporthardware verwendet werden kann} 
@@ -188,31 +200,32 @@ Funktionen für den Zugriff auf Basisfunktionen des Ports bereit (vgl. \cite{net
 Aufgabe dieser Hausarbeit ist es, einen Lowlevel-Treiber für einen speziellen Parallelport-Controller zu schreiben. Diese 
 Funktionalität ist normalerweise im architekturspezifischen Modul \verb|parport_pc| integriert.
 
-%% BILD
+\subsection{Aufbau des MCS9815-Treibers}
 
-\subsection{Strukturen}
+In der Struktur des Treibersystems ordnet sich der im Rahmen dieser Arbeit zu erstellende Treiber als hardwarespezifischer Treiber
+zwischen dem generischen parport-Modul und der eigentlichen Hardware ein. Er ist also der Adapter zwischen Hardware und parport-Modul 
+(vgl. Abbildung \ref{parport_struktur}).
 
-Die Dokumentation der Strukturen wurde den Quellen des Linux-Kernels entnommen 
-(vgl. \cite{net:2}, Documentation/parport-lowlevel.txt).
+Die verwendete Schnittstellenkarte Exsys EX-41012 wird über den PCI-Bus an das System angebunden. Aufgabe des Treibers nach der generellen
+Modulinitialisierung ist die Registrierung des Moduls als PCI-Treiber. Dies geschieht über den Aufruf der Kernelfunktion
+\verb|pci_register_driver| mit einer entsprechenden \verb|pci_driver|-Struktur.
 
-\subsubsection{parport\_driver}
+Sobald der Kernel die PCI-Karte mit der entsprechenden PCI-ID detektiert, wird die \verb|pci_probe| Funktion des Treibers aufgerufen, die
+daraufhin mit der Initialisierung diverser Strukturen für das parport-Subsystem beginnt. Diese Aufgabe übernimmt die Funktion \verb|init_parport|
+in der Datei\verb| mcs9815_main.c|.
+Sie fragt den Kernel u.a. nach den I/O-Ports, über die die Kommunikation mit der Hardware abläuft. Der MCS9815-Controllerchip verwendet pro
+Parallelport zwei Base-Address-Register (BAR). Wie die Parallelportregister auf die BARs der PCI-Hardware gemappt sind, zeigt 
+Abbildung \ref{portkonf_mcs9815}.
 
-Die Struktur \verb|parport_driver| repräsentiert einen Highlevel-Parport-Treiber.
+\begin{figure}[h!]
+ \centering
+ \includegraphics[scale=0.5]{./pics/mcs9815_ioports.png}
+ \caption{Portkonfiguration des MosChip MCS9815}
+ \label{portkonf_mcs9815}
+\end{figure}
 
-\begin{verbatim}
-struct parport_driver {
-    const char *name;
-    void (*attach) (struct parport *);
-    void (*detach) (struct parport *);
-    struct parport_driver *next;
-};\end{verbatim}
-
-Die Funktionzeiger \verb|attach| und \verb|detach| muss der Treiber zur Verfügung stellen, wenn er benachrichtigt
-werden will, sobald ein neuer Parallelport im System auftaucht oder einer entfernt wird (wenn z.B. der
-passende Lowlevel-Treiber entfernt wird).
-
-\subsubsection{parport}
-
+Sobald die entsprechenden I/O-Ports bestimmt wurden, werden sie vom Treiber mit der Kernelfunktion \verb|request_region| allokiert.
+Des weiteren füllt die \verb|init_parport| Funktion die Instanz der \verb|parport| Struktur mit sinnvollen Werten.
 Die Struktur \verb|parport| repräsentiert eine logische Parallelschnittstelle.
 
 \begin{verbatim}
@@ -226,10 +239,7 @@ struct parport {
     struct parport_operations *ops;
 };\end{verbatim}
 
-Dem Bitfeld \verb|modes| kann man entnehmen, welche Modi der Schnittstelle unterstützt werden (SPP, EPP).
-
-\subsubsection{parport\_operations}
-
+Die Struktur enthält auch einen Verweis auf die wichtige Struktur \verb|parport_operations|.
 Wie auch die Struktur \verb|file_operations| bei einem Dateisystemtreiber enthält die 
 Struktur \verb|parport_operations| u.a. Funktionszeiger auf die vom Treiber unterstützten
 Parallelportfunktionen.
@@ -259,438 +269,32 @@ struct parport_operations {
     void (*save_state)(struct parport *, struct parport_state *);
     void (*restore_state)(struct parport *, struct parport_state *);
 
-    /* Block read/write */
-    size_t (*epp_write_data) (struct parport *port, const void *buf, size_t len, int flags);
-    size_t (*epp_read_data) (struct parport *port, void *buf, size_t len, int flags);
-    size_t (*epp_write_addr) (struct parport *port, const void *buf, size_t len, int flags);
-    size_t (*epp_read_addr) (struct parport *port, void *buf, size_t len, int flags);
-
-    size_t (*ecp_write_data) (struct parport *port, const void *buf, size_t len, int flags);
-    size_t (*ecp_read_data) (struct parport *port, void *buf, size_t len, int flags);
-    size_t (*ecp_write_addr) (struct parport *port, const void *buf, size_t len, int flags);
+    /* [..] */
 
     size_t (*compat_write_data) (struct parport *port, const void *buf, size_t len, int flags);
     size_t (*nibble_read_data) (struct parport *port, void *buf, size_t len, int flags);
     size_t (*byte_read_data) (struct parport *port, void *buf, size_t len, int flags);
     struct module *owner;
-};\end{verbatim} 
-
-Die einzelnen Funktionen werden in den folgenden Abschnitten erläutert.
-
-\subsection{Funktionen}
-
-Die Dokumentation der Funktionen wurde den Quellen des Linux-Kernels entnommen 
-(vgl. \cite{net:2}, Documentation/parport-lowlevel.txt). Die meisten der angegebenen Funktionen
-sollte ein Lowlevel-Treiber bereitstellen.
-
-\subsubsection{SPP Port Funktionen}
-
-\paragraph{write\_data}
-
-\begin{verbatim}
-void (*write_data) (struct parport *port, unsigned char value);
-\end{verbatim}
-
-Schreibt \verb|value| in das Datenregister des angegebenen Ports.
-
-\paragraph{read\_data}
-
-\begin{verbatim}
-unsigned char (*read_data) (struct parport *port);
-\end{verbatim}
-
-Liest das Datenregister des angegebenen Ports und gibt den Inhalt zurück.
-
-\paragraph{read\_status}
-
-\begin{verbatim}
-unsigned char (*read_status) (struct parport *port);
-\end{verbatim}
-
-Liest das Statusregister des angegebenen Ports und gibt den Inhalt zurück.
-
-\paragraph{read\_control}
-
-\begin{verbatim}
-unsigned char (*read_control) (struct parport *port);
-\end{verbatim}
-
-Gibt den Wert zurück, der zuletzt in das Controlregister geschrieben wurde. Ein Zugriff
-auf die Hardware erfolgt dabei nicht.
-
-\paragraph{write\_control}
-
-\begin{verbatim}
-void (*write_control) (struct parport *port, unsigned char s);
-\end{verbatim}
-
-Schreibt die Bitmaske \verb|s| in das Controlregister des angegebenen Ports.
-
-\paragraph{frob\_control}
-
-\begin{verbatim}
-unsigned char (*frob_control) (struct parport *port,
-				unsigned char mask,
-				unsigned char val);
-\end{verbatim}
-
-Diese Funktion liest den gepufferten Wert aus dem Controlregister,
-maskiert die Bits mit Hilfe von \verb|mask| aus und wendet auf das Ergebnis
-eine XOR-Bitoperation mit \verb|val| an.
-
-Das Ergebnis der XOR-Operation wird dann in das Controlregister zurückgeschrieben.
-Da der Wert des Controlregisters zwischengespeichert wird, ergibt sich aus 
-der Funktion nur ein tatsächlicher Hardwarezugriff.
-
-\paragraph{enable\_irq}
-
-\begin{verbatim}
-void (*enable_irq) (struct parport *port)
-\end{verbatim}
-
-Weist die Hardware an, in Zukunft Interrupts zu erzeugen.
-
-\paragraph{disable\_irq}
-
-\begin{verbatim}
-void (*data_forward) (struct parport *port)
-\end{verbatim}
-
-Deaktiviert die Interrupts auf der Hardware.
-
-\paragraph{data\_forward}
-
-\begin{verbatim}
-void (*data_forward) (struct parport *port)
-\end{verbatim}
-
-Aktiviert die Treiber des Datenports.
-
-%\paragraph{data\_reverse}
-
-%\begin{verbatim}
-%void (*data_reverse) (struct parport *port)
-%\end{verbatim}
-
-%Places the data bus in a high impedance state, if port->modes has the
-%PARPORT\_MODE\_TRISTATE bit set.
-
-%verstehe ich nicht
-
-\subsubsection{EPP Port Funktionen}
-
-\paragraph{epp\_write\_data}
-\begin{verbatim}
-size_t (*epp_write_data) (struct parport *port, const void *buf, size_t len, int flags)
-\end{verbatim}
-
-Schreibt den Buffer im EPP Modus an den Port und gibt die Anzahl der geschriebenen Bytes zurück.
-
-\paragraph{epp\_read\_data}
-\begin{verbatim}
-size_t (*epp_read_data) (struct parport *port, void *buf, size_t len, int flags)
-\end{verbatim}
-Liest Bytes im EPP Modus vom angegebenen Port und gibt die Anzahl der gelesenen Bytes zurück.
-
-\paragraph{epp\_write\_addr}
-\begin{verbatim}
-size_t (*epp_write_addr) (struct parport *port, const void *buf, size_t len, int flags)
-\end{verbatim}
-Schreibt EPP-Adressen in den angegebenen Port und gibt die Anzahl der geschriebenen Bytes zurück.
-
-\paragraph{epp\_read\_addr}
-\begin{verbatim}
-size_t (*epp_read_addr) (struct parport *port, void *buf, size_t len, int flags)
-\end{verbatim}
-
-Liest EPP-Adressen in den angegebenen Buffer und gibt die Anzahl der tatsächlich gelesen 
-Adressen zurück.
-
-\subsubsection{ECP und andere Portfunktionen}
-
-\paragraph{ecp\_write\_data}
-\begin{verbatim}
-size_t (*ecp_write_data) (struct parport *port, const void *buf, size_t len, int flags)
-\end{verbatim}
-
-Schreibt einen ECP-Datenblock.
-
-
-\paragraph{ecp\_read\_data}
-
-\begin{verbatim}
-size_t (*ecp_read_data) (struct parport *port, void *buf, size_t len, int flags)
-\end{verbatim}
-
-Liest einen ECP-Datenblock.
-
-
-\paragraph{ecp\_write\_addr}
-
-\begin{verbatim}
-size_t (*ecp_write_addr) (struct parport *port, const void *buf, size_t len, int flags)
-\end{verbatim}
-
-Schreibt ECP-Adressen.
-
-
-\paragraph{nibble\_read\_data}
-
-\begin{verbatim}
-size_t (*nibble_read_data) (struct parport *port, void *buf, size_t len, int flags);
-\end{verbatim}
-
-Liest einen Datenblock in Nibble-Mode.
-
-\paragraph{byte\_read\_data}
-
-\begin{verbatim}
-size_t (*byte_read_data) (struct parport *port, void *buf, size_t len, int flags)
-\end{verbatim}
-
-Liest einen Datenblock in Byte-Mode.
-
-\paragraph{compat\_write\_data}
-
-\begin{verbatim}
-size_t (*compat_write_data) (struct parport *port, const void *buf, size_t len, int flags)
-\end{verbatim}
-
-Schreibt einen Datenblock im Kompatibilitätsmodus.
-
-\subsection{Globale Funktionen den parport Subsystems}
-
-Die globalen Funktionen des parport Subsystems können sowohl von den Lowlevel- als auch
-Highlevel-Treibern verwendet werden.
-
-\subsubsection{Funktionen für Lowlevel-Treiber}
-
-\paragraph{parport\_register\_port}
-\begin{verbatim}
-struct parport *parport_register_port(unsigned long base, int irq, int dma, 
-                                      struct parport_operations *ops)
-\end{verbatim}
-
-Sobald ein Lowlevel-Treiber einen Parallelport detektiert und diesen den Highlevel-Treibern zur
-Verfügung stellen will, macht er den Port über diese Methode dem System bekannt.
-
-Die Struktur ops darf nicht freigegeben werden, bevor nicht parport\_remove\_port für den
-angegebenen Port aufgerufen wurde.
-
-Gerätetreiber sollten danach mit parport\_announce\_port über den neuen Parallelport informiert
-werden.
-
-\paragraph{parport\_remove\_port}
-\begin{verbatim}
-void parport_remove_port(struct parport *port)
-\end{verbatim}
-
-Entfernt einen Parallelport aus dem System. Alle registrierten Gerätetreiber werden durch den
-Aufruf ihrer jeweiligen detach Funktionen über die Entfernung des Ports informiert.
-
-\paragraph{parport\_announce\_port}
-\begin{verbatim}
-void parport_announce_port (struct parport *port)
-\end{verbatim}
-
-Macht einen registrierten Parallelport bei den Gerätetreibern bekannt, in dem die jeweiligen
-attach Funktionen der Gerätetreiber aufgerufen werden.
-
-\subsubsection{Funktionen für Highlevel-Treiber}
-
-\paragraph{parport\_register\_driver}
-
-\begin{verbatim}
-int parport_register_driver (struct parport_driver *driver);
-\end{verbatim}
-
-Damit ein Treiber über neue Parallelschnittstellen des Systems informiert wird, muss er
-sich mit dieser Methode im Kernel registrieren. Nach der Registrierung wird der Treiber
-sofort über alle bereits detektierten Parallelschnittstellen informiert (attach Funktion)
-und über jede, die in Zukunft von einem Lowlevel-Treiber bereitgestellt oder entfernt wird.
-
-\paragraph{parport\_unregister\_driver}
-
-\begin{verbatim}
-void parport_unregister_driver (struct parport_driver *driver);
-\end{verbatim}
-
-Nach Aufruf dieser Funktion wird der angegebene Treiber nicht mehr über die Registrierung
-und Deregistrierung von Parports informiert. Die bereits registrierten Geräte werden \emph{nicht}
-automatisch deregistriert.
-
-% \paragraph{parport\_enumerate}
-% Lassen wir weg, da die Funktion deprecated ist.
-
-\paragraph{parport\_register\_device}
-
-\begin{verbatim}
-typedef int (*preempt_func) (void *handle);
-typedef void (*wakeup_func) (void *handle);
-typedef int (*irq_func) (int irq, void *handle, struct pt_regs *);
-
-struct pardevice *parport_register_device(struct parport *port,
-                                          const char *name,
-                                          preempt_func preempt,
-                                          wakeup_func wakeup,
-                                          irq_func irq,
-                                          int flags,
-                                          void *handle);
-\end{verbatim}
-
-Diese Funktion wird verwendet um einen Gerätetreiber, der den angegebenen Parallelport verwenden will,
-im parport System zu registrieren. Der gewählte Gerätename ('name') muss während der Lebenszeit des
-Geräts eindeutig sein. 
-Die über preempt spezifizierte Funktion wird aufgerufen, wenn ein anderer Treiber den Port verwenden
-möchte (es können mehrere Geräte eine Parallelschnittstelle verwenden).
-Die wakeup Funktion wird aufgerufen, sobald der Parallelport von einem anderen Treiber wieder
-freigegeben wurde. Die Funktion irq wird aufgerufen, wenn am angegebenen Parallelport ein Interrupt
-auftritt.
-
-\paragraph{parport\_unregister\_device}
-
-\begin{verbatim}
-void parport_unregister_device (struct pardevice *dev)
-\end{verbatim}
-
-Deregistriert das angegebene Gerät ('dev').
-
-\paragraph{parport\_claim und parport\_claim\_or\_block}
-
-\begin{verbatim}
-int parport_claim (struct pardevice *dev)
-int parport_claim_or_block (struct pardevice *dev)
-\end{verbatim}
-
-Mit \verb|parport_claim| versucht der Gerätetreiber Kontrolle über den Parallelport zu erlangen.
-Bei der Funktion \verb|parport_claim_or_block| legt sich der Aufrufer schlafen, sofern der
-Parallelport von einem anderen Treiber registriert wurde.
-
-\paragraph{parport\_release}
-
-\begin{verbatim}
-void parport_release (struct pardevice *dev)
-\end{verbatim}
-
-Sobald der Treiber nach dem Aufruf von \verb|parport_claim| die Nutzungs des Parallelports beendet kann,
-kann er ihn mit \verb|parport_release| wieder freigeben, damit andere Treiber den Port nutzen können.
-
-\paragraph{parport\_yield und parport\_yield\_blocking}
-
-\begin{verbatim}
-int parport_yield (struct pardevice *dev)
-int parport_yield_blocking (struct pardevice *dev);
-\end{verbatim}
-
-Mit der Funktion \verb|parport_yield| kann ein Gerätetreiber kurzfristig die Kontrolle über den mit
-\verb|parport_claim| zur Nutzung registrierten Parallelport abgeben.
-
-\paragraph{parport\_wait\_peripheral}
-\begin{verbatim}
-int parport_wait_peripheral (struct parport *port,
-			     unsigned char mask,
-			     unsigned char val);
-\end{verbatim}
-
-Wartet bis das Statusregister des angegebenen Ports ausmaskiert mit \verb|mask| den Wert \verb|val| annimmt.
-Nach 35ms erfolgt ein Timeout.
-
-\paragraph{parport\_poll\_peripheral}
-
-\begin{verbatim}
-int parport_poll_peripheral (struct parport *port,
-			     unsigned char mask,
-			     unsigned char val,
-			     int usec);
-\end{verbatim}
-
-
-\paragraph{parport\_wait\_event}
-\begin{verbatim}
-int parport_wait_event (struct parport *port, signed long timeout)
-\end{verbatim}
-
-
-\paragraph{parport\_negotiate}
-\begin{verbatim}
-int parport_negotiate (struct parport *, int mode)
-\end{verbatim}
-
-\paragraph{parport\_read}
-\begin{verbatim}
-ssize_t parport_read (struct parport *, void *buf, size_t len)
-\end{verbatim}
-
-\paragraph{parport\_write}
-\begin{verbatim}
-ssize_t parport_write (struct parport *, const void *buf, size_t len)
-\end{verbatim}
-
-
-\paragraph{parport\_open}
-\begin{verbatim}
-struct pardevice *parport_open (int devnum, const char *name,
-				int (*pf) (void *),
-				void (*kf) (void *),
-				void (*irqf) (int, void *,
-				struct pt_regs *),
-				int flags, void *handle)
-\end{verbatim}
-
-
-\paragraph{parport\_close}
-\begin{verbatim}
-void parport_close (struct pardevice *dev)
-\end{verbatim}
-
-
-\paragraph{parport\_device\_id}
-\begin{verbatim}
-ssize_t parport_device_id (int devnum, char *buffer, size_t len)
-\end{verbatim}
-
-
-\paragraph{parport\_device\_coords}
-\begin{verbatim}
-int parport_device_coords (int devnum, int *parport, int *mux, int *daisy)
-\end{verbatim}
-
-\paragraph{parport\_find\_class}
-\begin{verbatim}
-typedef enum {
-    PARPORT_CLASS_LEGACY = 0,       /* Non-IEEE1284 device */
-    PARPORT_CLASS_PRINTER,
-    PARPORT_CLASS_MODEM,
-    PARPORT_CLASS_NET,
-    PARPORT_CLASS_HDC,              /* Hard disk controller */
-    PARPORT_CLASS_PCMCIA,
-    PARPORT_CLASS_MEDIA,            /* Multimedia device */
-    PARPORT_CLASS_FDC,              /* Floppy disk controller */
-    PARPORT_CLASS_PORTS,
-    PARPORT_CLASS_SCANNER,
-    PARPORT_CLASS_DIGCAM,
-    PARPORT_CLASS_OTHER,            /* Anything else */
-    PARPORT_CLASS_UNSPEC,           /* No CLS field in ID */
-    PARPORT_CLASS_SCSIADAPTER
-} parport_device_class;
-
-int parport_find_class (parport_device_class cls, int from);
-\end{verbatim}
-
-
-\paragraph{parport\_find\_device}
-\begin{verbatim}
-int parport_find_device (const char *mfg, const char *mdl, int from)
-\end{verbatim}
-
-
-\paragraph{parport\_set\_timeout}
-\begin{verbatim}
-long parport_set_timeout (struct pardevice *dev, long inactivity)
-\end{verbatim}
-
+};\end{verbatim}
+
+Das generische parport Modul des Kernels verwendet diese Funktionszeiger um über das hardwarespezifische Modul mit 
+der tatsächlichen Hardware zu kommunizieren.
+Die Implementierung dieser Funktionen befinden sich in der Datei \verb|mcs9815_ops.c|. 
+
+Mit den entsprechend initialisierten Strukturen registriert der Treiber mit dem Aufruf der Funktion \verb|parport_register_port| einen Parallelport im Kernel.
+Um diesen Parallelport den Gerätetreibern im System bekannt zu machen, muss die Funktion \verb|parport_announce_port| aufgerufen werden.
+Wie ein (highlevel) Gerätetreiber das parport-Subsystem verwendet wird im folgenden Abschnitt erläutert.
+Nach dem Bekanntmachen des Treibers ist die Initialisierung abgeschlossen und der Treiber kann verwendet werden.
+Beim Entfernen des Treibers aus dem System wird der Parallelport vom Kernel abgemeldet, die Strukturen abgemeldet und schließlich das PCI-Gerät 
+abgeschaltet.
+
+\subsection{Highlevel Testtreiber}
 
 \section{Fazit}
+
+Zum Status des Treibers ist zu sagen, dass er
+nur im SPP-Modus getestet wurde. Die EPP-Funktionen sind zwar vollständig implementiert, aber mangels Testgerät ungetestet.
+Die ECP-Funktionen konnten aus Zeitgründen nicht mehr vollständig implementiert und getestet werden.
 
 \bibliography{literatur}
 
