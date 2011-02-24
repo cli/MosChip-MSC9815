@@ -10,6 +10,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Nerdbuero Staff");
 
+// Our PCI driver table entries
 static const struct pci_device_id id_table[] =
 {
 	{
@@ -32,10 +33,11 @@ static struct pci_driver mcs9815_pci_driver =
 
 extern struct parport_operations ops;
 
+// The MCS9815 supports two independent parports
 struct mcs9815_port* port0 = NULL;
 struct mcs9815_port* port1 = NULL;
 
-// Probes the Base Address Register (BAR) of the given PCI device
+/* Probes the Base Address Register (BAR) of the given PCI device */
 static int probe_bar(struct pci_dev* dev, unsigned long* start, int bar)
 {
 	unsigned long end;
@@ -44,7 +46,7 @@ static int probe_bar(struct pci_dev* dev, unsigned long* start, int bar)
 	return end - *start;	
 }
 
-// Registers the given MCS9815 port at the parport subsystem
+/* Registers the given MCS9815 port at the parport subsystem */
 static int register_parport(struct mcs9815_port* port, struct parport_operations* ops)
 {
 	port->port = parport_register_port(0, 0, 0, ops);
@@ -55,8 +57,10 @@ static int register_parport(struct mcs9815_port* port, struct parport_operations
 	return 0;
 }
 
-// Unregisters the port at the parport subsystem and the frees the
-// resources of the port
+/*
+ * Unregisters the port at the parport subsystem and the frees the
+ * resources of the port.
+ */
 static void free_parport(struct mcs9815_port* port)
 {
 	if(port != NULL)
@@ -73,6 +77,11 @@ static void free_parport(struct mcs9815_port* port)
 	}
 }
 
+/*
+ * Initializes a port, which includes probing of PCI BARs, requesting
+ * the I/O regions, registering the parport with the subsystem and
+ * announcing the port.
+ */
 static int init_parport(struct pci_dev* dev, struct mcs9815_port* port, 
                           const char* name, int bar0, int bar1)
 {
@@ -109,7 +118,7 @@ static int init_parport(struct pci_dev* dev, struct mcs9815_port* port,
 	port->port->name  = name;
 	port->port->irq   = -1; // -1 disables interrupt
 	port->port->modes = PARPORT_MODE_PCSPP | PARPORT_MODE_SAFEININT;
-	port->port->dma   = PARPORT_DMA_NONE;
+	port->port->dma   = PARPORT_DMA_NONE; // DMA is not support by MCS9815 hardware
 
 	pdev = platform_device_register_simple("parport_pc", -1, NULL, 0);
 	port->port->dev = &(pdev->dev);
@@ -121,8 +130,10 @@ static int init_parport(struct pci_dev* dev, struct mcs9815_port* port,
 	return 0;
 }
 
-// PCI probe function that is called by the kernel if it detects the
-// hardware specified by the above id_table entry
+/*
+ * PCI probe function that is called by the kernel if it detects the
+ * hardware specified by the above id_table entry.
+ */
 static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 {
 	if(unlikely(pci_enable_device(dev) < 0)) // Error codes < 0?
@@ -165,9 +176,11 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	return 0;
 }
 
-// Called when the module's PCI driver is removed from the kernel.
-// This functions unregisters the ports, frees its resources and
-// disables the PCI device.
+/*
+ * Called when the module's PCI driver is removed from the kernel.
+ * This functions unregisters the ports, frees its resources and
+ * disables the PCI device.
+ */
 static void pci_remove(struct pci_dev* dev)
 {
 	// Remove parallelport from the parport subsystem and 
@@ -179,7 +192,7 @@ static void pci_remove(struct pci_dev* dev)
 	pci_disable_device(dev);
 }
 
-// Module init function
+/* Module init function */
 static int __init mcs9815_init(void)
 {
 	printk(KERN_DEBUG "MCS9815 module loading...\n");
@@ -198,7 +211,7 @@ static int __init mcs9815_init(void)
 	return 0;
 }
 
-// Module exit function
+/* Module exit function */
 static void __exit mcs9815_exit(void)
 {
 	printk(KERN_DEBUG "MCS9815 module unloading...\n");
