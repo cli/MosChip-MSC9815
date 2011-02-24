@@ -37,7 +37,7 @@ extern struct parport_operations ops;
 struct mcs9815_port* port0 = NULL;
 struct mcs9815_port* port1 = NULL;
 
-/* Probes the Base Address Register (BAR) of the given PCI device */
+/** Probes the Base Address Register (BAR) of the given PCI device */
 static int probe_bar(struct pci_dev* dev, unsigned long* start, int bar)
 {
 	unsigned long end;
@@ -46,7 +46,7 @@ static int probe_bar(struct pci_dev* dev, unsigned long* start, int bar)
 	return end - *start;	
 }
 
-/* Registers the given MCS9815 port at the parport subsystem */
+/** Registers the given MCS9815 port at the parport subsystem */
 static int register_parport(struct mcs9815_port* port, struct parport_operations* ops)
 {
 	port->port = parport_register_port(0, 0, 0, ops);
@@ -57,7 +57,7 @@ static int register_parport(struct mcs9815_port* port, struct parport_operations
 	return 0;
 }
 
-/*
+/**
  * Unregisters the port at the parport subsystem and the frees the
  * resources of the port.
  */
@@ -77,7 +77,7 @@ static void free_parport(struct mcs9815_port* port)
 	}
 }
 
-/*
+/**
  * Initializes a port, which includes probing of PCI BARs, requesting
  * the I/O regions, registering the parport with the subsystem and
  * announcing the port.
@@ -130,7 +130,7 @@ static int init_parport(struct pci_dev* dev, struct mcs9815_port* port,
 	return 0;
 }
 
-/*
+/**
  * PCI probe function that is called by the kernel if it detects the
  * hardware specified by the above id_table entry.
  */
@@ -176,7 +176,7 @@ static int pci_probe(struct pci_dev* dev, const struct pci_device_id* id)
 	return 0;
 }
 
-/*
+/**
  * Called when the module's PCI driver is removed from the kernel.
  * This functions unregisters the ports, frees its resources and
  * disables the PCI device.
@@ -192,7 +192,7 @@ static void pci_remove(struct pci_dev* dev)
 	pci_disable_device(dev);
 }
 
-/* Module init function */
+/** Module init function */
 static int __init mcs9815_init(void)
 {
 	printk(KERN_DEBUG "MCS9815 module loading...\n");
@@ -211,7 +211,7 @@ static int __init mcs9815_init(void)
 	return 0;
 }
 
-/* Module exit function */
+/** Module exit function */
 static void __exit mcs9815_exit(void)
 {
 	printk(KERN_DEBUG "MCS9815 module unloading...\n");

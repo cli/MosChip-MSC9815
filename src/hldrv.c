@@ -16,7 +16,8 @@ static int timer_interval = 500;
 module_param(timer_interval, int, S_IRUGO);
 static unsigned char countvalue = 0;
 
-// Increments the counter and writes it to parallelport
+/** Increments the counter and writes it to parallelport 
+ * */
 static void timer_strobe(unsigned long data)
 {
 	printk(KERN_DEBUG "hldrv: Tick!\n");
@@ -37,12 +38,26 @@ static void timer_strobe(unsigned long data)
 	}
 }
 
+/** Detach Function needed by parport_driver (Parport driver struct)
+ * 
+ * 	 This Function does literally nothing, but it's nice mentioning it!
+	 Here be dragons!
+ * */
 static void nerdbuero_detach (struct parport *port)
 {
-	// This Function does literally nothing, but it's nice mentioning it!
-	// Here be dragons!
+	// No code here
 }
 
+
+/** Attach Function needed by parport_driver (Parport driver struct).
+ * 
+ *	In this method a parport device is registered by the parport subsystem 
+ *  with the parport_register_device method.
+ * 	The Essential parameter is the parport struct, which represents
+ * 	
+ * 
+ * 
+ * */
 static void nerdbuero_attach (struct parport *port)
 {
 	if(dev == NULL)
@@ -77,13 +92,20 @@ static void nerdbuero_attach (struct parport *port)
 	}
 }
 
-// Parport driver struct
+/** Parport driver struct
+ * 
+*/
 static struct parport_driver nerdbuero_driver = {
 	.name = "nerdbueroblinker",
 	.attach = nerdbuero_attach,
 	.detach = nerdbuero_detach,
 };
 
+
+/**	Initialitation of the parport high level module.
+ * 
+ * Registers a parport driver by using parport_Register_driver
+ * */
 static int __init parport_init(void)
 {
 	printk(KERN_INFO "hldrv module loading...\n");
@@ -98,6 +120,12 @@ static int __init parport_init(void)
 	return 0;
 }
 
+/** Exiting the Module.
+ * 
+ * Timer strobe will be deleted, the parport_driver is going 
+ * to be unregistered.
+ * 
+ * */
 static void __exit parport_exit(void)
 {
 	printk(KERN_INFO "hldrv module unloading...\n");

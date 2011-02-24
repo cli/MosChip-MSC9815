@@ -8,14 +8,14 @@ extern struct mcs9815_port* port1;
 #define PORT(p) \
 	(p == port0->port ? port0 : port1)
 
-/* Writes the given byte value in the data register */
+/** Writes the given byte value in the data register */
 void write_data(struct parport* port, unsigned char value)
 {
 	printk(KERN_DEBUG "%s: write_data\n", port->name);
 	outb(value, REG_EPPDATA(PORT(port)));
 }
 
-/* Writes up to len bytes of the given buffer in the specified port */
+/** Writes up to len bytes of the given buffer in the specified port */
 size_t compat_write_data(struct parport* port, const void* buf, size_t len, int flags)
 {
 	size_t n;
@@ -28,14 +28,14 @@ size_t compat_write_data(struct parport* port, const void* buf, size_t len, int 
 	return n;
 }
 
-/* Reads a byte off the data register of the given port */
+/** Reads a byte off the data register of the given port */
 unsigned char read_data(struct parport* port)
 {
 	printk(KERN_DEBUG "%s: read_data\n", port->name);
 	return inb(REG_DPR(PORT(port)));
 }
 
-/* 
+/**
  * Writes the bitmask control into the control register of the specified
  * port. The control value is buffered in the mcs9815_port struct for
  * read access (see read_control, frob_control).
@@ -48,7 +48,7 @@ void write_control(struct parport* port, unsigned char control)
 	p->ctrl = control;
 }
 
-/* 
+/**
  * Returns the bitmask representing the contents of the port's control
  * register. As the value is buffered in the mcs9815_struct to actual
  * hardware access is performed.
@@ -59,7 +59,7 @@ unsigned char read_control(struct parport* port)
 	return PORT(port)->ctrl;
 }
 
-/*
+/**
  * This function takes the contents of the port's control register,
  * masks out the bits using (negated) mask and xor'ing the result with
  * val. The result of this operation is written to the port's control
@@ -82,14 +82,14 @@ unsigned char frob_control(struct parport* port, unsigned char mask,
 	return p->ctrl;
 }
 
-/* Returns the value of the status register */
+/** Returns the value of the status register */
 unsigned char read_status(struct parport* port)
 {
 	printk(KERN_DEBUG "%s: read_status\n", port->name);
 	return inb(REG_DSR(PORT(port)));
 }
 
-/*
+/**
  * Reads up to len bytes into the given buffer using parport nibble 
  * mode. A byte is constructed of two half-byte (nibbles) which are
  * received via the status register.
@@ -122,7 +122,7 @@ size_t nibble_read_data(struct parport* port, void* buf, size_t len, int flags)
 	return n;
 }
 
-/*
+/**
  * Reads up to len bytes into the given buffer using byte mode.
  */
 size_t byte_read_data(struct parport* port, void* buf, size_t len, int flags)
@@ -137,7 +137,7 @@ size_t byte_read_data(struct parport* port, void* buf, size_t len, int flags)
 	return n;
 }
 
-/*
+/**
  * Sets bit 4 of control register to enable the generation of interrupts.
  */
 void enable_irq(struct parport* port)
@@ -148,7 +148,7 @@ void enable_irq(struct parport* port)
 	frob_control(port, (1 << 4), (1 << 4));
 }
 
-/*
+/**
  * Clears bit 4 of the control register to disable interrupts on the
  * port.
  */
@@ -160,7 +160,7 @@ void disable_irq(struct parport* port)
 	frob_control(port, (1 << 4), 0);
 }
 
-/*
+/**
  * This sets the data direction to forward (which is default for SPP)
  */
 void data_forward(struct parport* port)
@@ -171,7 +171,7 @@ void data_forward(struct parport* port)
 	frob_control(port, (1 << 5), 0);
 }
 
-/*
+/**
  * Reverses the data direction (required for byte transfer mode)
  */
 void data_reverse(struct parport* port)
@@ -182,7 +182,7 @@ void data_reverse(struct parport* port)
 	frob_control(port, (1 << 5), (1 << 5));
 }
 
-/*
+/**
  * Initializes the chip.
  */
 void init_state(struct pardevice* pardev, struct parport_state* parstate)
@@ -196,7 +196,7 @@ void init_state(struct pardevice* pardev, struct parport_state* parstate)
 	// Write 0x35 in ECR register for EPP mode
 }
 
-/*
+/**
  * Saves the state of the port. Why is this called on driver removal?
  */
 void save_state(struct parport* parport, struct parport_state* parstate)
@@ -206,7 +206,7 @@ void save_state(struct parport* parport, struct parport_state* parstate)
 	
 }
 
-/*
+/**
  * Restores the state of the port.
  */
 void restore_state(struct parport* parport, struct parport_state* parstate)
@@ -214,7 +214,7 @@ void restore_state(struct parport* parport, struct parport_state* parstate)
 	printk(KERN_DEBUG "%s: restore_state\n", parport->name);
 }
 
-/*
+/**
  * Writes the up to len bytes of the given buffer using EPP data registers.
  */
 size_t epp_write_data(struct parport* port, const void* buf, size_t len, int flags)
@@ -228,7 +228,7 @@ size_t epp_write_data(struct parport* port, const void* buf, size_t len, int fla
 	return len;
 }
 
-/*
+/**
  * Writes up to len bytes to the specified port using EPP address registers.
  */
 size_t epp_write_addr(struct parport* port, const void* buf, size_t len, int flags)
@@ -242,7 +242,7 @@ size_t epp_write_addr(struct parport* port, const void* buf, size_t len, int fla
 	return len;
 }
 
-/*
+/**
  * Reads up to len bytes into the given buffer from the EPP data registers.
  */
 size_t epp_read_data(struct parport* port, void* buf, size_t len, int flags)
@@ -256,7 +256,7 @@ size_t epp_read_data(struct parport* port, void* buf, size_t len, int flags)
 	return len;
 }
 
-/*
+/**
  * Reads up to len bytes into the given buffer off the EPP address registers.
  */
 size_t epp_read_addr(struct parport* port, void* buf, size_t len, int flags)
@@ -270,7 +270,7 @@ size_t epp_read_addr(struct parport* port, void* buf, size_t len, int flags)
 	return len;
 }
 
-/* 
+/** 
  * Writes up to len bytes into the chip's FIFO until the FIFO is full.
  */
 size_t ecp_write_data(struct parport* port, const void* buf, size_t len, int flags)
@@ -289,7 +289,7 @@ size_t ecp_write_data(struct parport* port, const void* buf, size_t len, int fla
 	return n;
 }
 
-/*
+/**
  * Reads up to len bytes from the chip's FIFO into the given buffer
  * as long as the FIFO is not empty.
  */
