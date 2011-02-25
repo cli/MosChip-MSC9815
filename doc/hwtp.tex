@@ -330,7 +330,7 @@ struct parport_operations {
 };\end{verbatim}
 
 Das generische parport Modul des Kernels verwendet diese Funktionszeiger um über das hardwarespezifische Modul mit 
-der tatsächlichen Hardware zu kommunizieren.
+der tatsächlichen Hardware zu kommunizieren. Das Parport-Modul muss für den Betrieb geladen sein.
 Die Implementierung dieser Funktionen befinden sich in der Datei \verb|mcs9815_ops.c|. 
 
 Mit den entsprechend initialisierten Strukturen registriert der Treiber mit dem Aufruf der Funktion \verb|parport_register_port| einen Parallelport im Kernel.
@@ -342,7 +342,7 @@ abgeschaltet.
 
 \subsection{Highlevel Testtreiber}
 
-Nach dem Vorbild des \verb|lp|-Treibers unter Linux, welcher einen Highevel-Lineprinter für die parallele Schnittstelle darstellt, wurde ein Testtreiber entwickelt. Als Testgerät wurde an den LPT-Anschluss der PCI-Karte eine mit LEDs ausgestattete Platine angeschlossen, die durch jeweiliges An- und Ausschalten der einzelnen Lichter den Zustand des Datenregisters der parallelen Schnittstelle anzeigt. Das Ziel der Entwicklung war es nun einen Treiber zu entwickeln, der den Datenport regelmäßig mit Inhalt befüllt, welcher dann durch die LEDs der Platine entsprechend visualisiert dargestellt wird. 
+Nach dem Vorbild des \verb|lp|-Treibers unter Linux, welcher einen Highevel-Lineprinter für die parallele Schnittstelle darstellt, wurde ein Testtreiber entwickelt. Als Testgerät wurde an den LPT-Anschluss der PCI-Karte eine mit LEDs ausgestattete Platine angeschlossen, die durch jeweiliges An- und Ausschalten der einzelnen Lichter den Zustand des Datenregisters der parallelen Schnittstelle anzeigt. Das Ziel der Entwicklung war es nun einen Treiber zu entwickeln, der den Datenport regelmäßig mit Inhalt befüllt, welcher dann durch die LEDs der Platine entsprechend visualisiert dargestellt wird. Auf der LED-Platine wird dann entsprechend zum Zahlenwert binär hochgezählt. Erreicht der Zählerstand einen Wert größer als 255, wird auf der Platine von Neuem angefangen zu zählen.
 Ein solch wechselnder Inhalt wird über einen einfachen Zähler realisiert, der in einem geiwssen Zeitintervall den Zählerstand um eins inkrementiert. Der Linuxkernel bietet hierfür Timer-Funktionalität an, die durch das Einbinden von \verb|<linux/timer.h>| genutzt werden können. Durch \verb|init_timer(&timer)| wird der Timer initialisiert. Die Methode erwartet eine Referenz auf ein Struct vom Typ timer\_list. 
 \begin{verbatim}
   static struct timer_list timer;
@@ -357,7 +357,7 @@ Ein solch wechselnder Inhalt wird über einen einfachen Zähler realisiert, der 
 
 Nach der Timerinitialisierung werden zusätzliche Parameter festgelegt. Insbesondere ist der Funktionspointer auf die Methode von Bedeutung, die immer dann ausgeführt werden soll, wenn der festgelegte Zeitinterval von 500ms abgelaufen ist. In diesem Fall wird die methode \verb|timer_strobe| jeweils aufgerufen.
 
-Der Testtreiber verwendet das \verb|parport|-Subsystem und registriert sich an diesem als Treiber. Über vorhandene Methoden zum Schreiben auf den Parallelport und weitere Funktionalität wird die Kommunikation mit dem Parport-Subsystem realisiert. Um zunächst sich am Subsystem als Treiber zu registrieren, wird ein Struct vom Typ \verb|parport_driver benötigt|.
+Der Testtreiber verwendet das \verb|parport|-Subsystem und registriert sich an diesem als Treiber. Über vorhandene Methoden zum Schreiben auf den Parallelport und weitere Funktionalität wird die Kommunikation mit dem Parport-Subsystem realisiert. Um zunächst den Treiber am Subsystem zu registrieren, wird ein Struct vom Typ \verb|parport_driver| benötigt.
 
 \begin{verbatim}
 #include <parport.h>
@@ -370,21 +370,44 @@ struct parport_driver {
 };
 \end{verbatim}
 
-In diesem Struct werden der Name des Treibers, sowie Funktionenszeiger auf Methoden festgelegt, um die Abläufe zu steuern, die beim Aufsetzen / bei Entfernen des Treibers von Bedeutung sind. Mit den Informationen aus diesem Struct kann das Device beim Parport-Subsystem registriert werden durch bereitgestellte Methode:
+In diesem Struct werden der Name des Treibers, sowie Funktionenszeiger auf Methoden festgelegt, um die Abläufe zu steuern, die beim Aufsetzen/Entfernen des Treibers von Bedeutung sind. Mit den Informationen aus diesem Struct kann das Device beim Parport-Subsystem registriert werden durch bereitgestellte Methode:
 \begin{verbatim}
 int parport_register_driver(struct parport_driver *driver);
 \end{verbatim}
 
+
+Nach dem Registrieren des Treibers am Parport-Subsystem wird vom Kernel zu gegebener Zeit die Attach-Methode vom \verb|parport_driver| Struct aufgerufen. In der Attach-Methode wird dann das zu verwendende Gerät ermittelt. Ein Struct vom Typ \verb|pardevice| wird dann von der folgenden Methode zurückgegeben:
+
 \begin{verbatim}
 #include <parport.h>
 
-struct pardevice *parport_register_device(struct parport *port, const char *name, int (*pf) (void *), void (*kf) (void *), void (*irq_func) (int, void *, struct pt_regs *), int flags, void *handle);
+struct pardevice *parport_register_device(struct parport *port, 
+  const char *name, 
+  int (*pf) (void *), 
+  void (*kf) (void *), 
+  void (*irq_func) (int, void *, 
+  struct pt_regs *), 
+  int flags, void *handle);
 \end{verbatim}
+
+Um den konkreten Betriebsmodus der parallelen Schnittstelle auszuhandeln, wird die Methode \verb|parport_negotiate| verwendet.
 
 \begin{verbatim}
 #include <parport.h>
 int parport_negotiate(struct parport *port, int mode);
 \end{verbatim}
+
+In diesem Fall könnte z.B. über die Konstante \verb|IEEE1284_MODE_COMPAT| der Kompatibilitätsmodus (SPP) eingestellt werden. 
+
+In der \verb|timer_strobe|-Methode wird jeweils auf den Parallelport geschrieben. Hierfür ist eigentlich die entsprechende Write-Methode verwendet.
+
+\begin{verbatim}
+#include <parport.h>
+
+ssize_t parport_write(struct parport *port, const void *buf, size_t len);
+\end{verbatim}
+
+Beim Testen des entworfenen Treibers trat bei der Verwendung dieser Methode jedoch ein Problem auf. Unter Verwendung des Standard-\verb|parport_pc|-Moduls als low-level-Treiber kam es beim Aufruf der write-Methode zu einem Systemabsturz. Interessanterweise konnte dieses Problem bei der Verwendung des eigenen low-level-Treibers nicht reproduziert werden. Mit dem (in dieser Projektarbeit entstandenden) mcs9815-Modul als Ersatz für das parport\_pc-Modul funktionierte der Aufruf der Write-Methode fehlerfrei. Damit aber auch das standard parport\_pc-Modul des Linux-Kernels mit dem High-Level-Treiber funktioniert, wurde ein anderer Schreibaufruf vewendet. Über die Parport-Operations des Device-Structs wird eine zusätzliche write-Methode zur Verfügung gestellt, die mit beiden Modulen funktioniert. Die entsprechende Passage ist im Code wie folgt hinterlegt
 
 \begin{verbatim}
 // Writes the countvalue into our port
@@ -396,6 +419,8 @@ int parport_negotiate(struct parport *port, int mode);
 // Additionally parport_write() only works with our mcs9815 
 // driver and freezes with the default parport_pc driver...
 \end{verbatim}
+
+Beim Entladen des Highlevel-Treiber-Moduls wird die \verb|parport_unregister_device| noch angewendet.
 
 \begin{verbatim}
 void parport_unregister_device(struct pardevice *dev);

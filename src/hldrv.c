@@ -26,9 +26,9 @@ static void timer_strobe(unsigned long data)
 	if (atomic_read(&running) > 0)
 	{
 		countvalue++;
-	        // Writes the countvalue into our port
-        	dev->port->ops->write_data(dev->port, countvalue);
-        	// Alternative:
+	    // Writes the countvalue into our port
+        dev->port->ops->write_data(dev->port, countvalue);
+        // Alternative:
 		// written = parport_write(dev->port, &countvalue, 1);
 		// dev->port->ops->write_data is  probably faster as parport_write 
 		// has an additional call to compat_write_data() in between. 
