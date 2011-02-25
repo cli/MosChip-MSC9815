@@ -51,6 +51,7 @@
   \renewcommand\@evenfoot{}
   \renewcommand\thepage{\arabic{page}}
 }
+
 \bibliographystyle{plain}
 
 \title{Hardwarenahe System- und Treiberprogrammierung}
@@ -87,26 +88,27 @@ Als Hardwareziel kommt eine PCI-Karte der Firma Exsys Inc (http://www.exsys.com)
 
 \section{Parallelportschnittstelle}
 
-Die Parallelportschnittstelle ist wesentlich durch den IEEE 1284-Standard geprägt und definiert drei mögliche Steckertypen. Auf PC-Seite findet sich ein 25-poliger D-SUB.Stecker, der 1981 von IBM im PC eingeführt wurde (\textbf{Typ A}). Die 36-polige Centronics-Schnittstelle stellt den Stecker vom \textbf{Typ B} dar. Als Mini-Centronics werden Stecker vom \textbf{Typ C} bezeichnet, die ebenfalls über 36 Pole verfügen, aber deutlich kompakter daherkommen als übliche Centronics-Stecker. 
-
+Die Parallelportschnittstelle ist wesentlich durch den IEEE 1284-Standard geprägt und definiert drei mögliche Steckertypen. Auf PC-Seite findet sich ein 25-poliger D-SUB.Stecker, der 1981 von IBM im PC eingeführt wurde (\textbf{Typ A}). Die 36-polige Centronics-Schnittstelle stellt den Stecker vom \textbf{Typ B} dar. Als Mini-Centronics werden Stecker vom \textbf{Typ C} bezeichnet, die ebenfalls über 36 Pole verfügen, aber deutlich kompakter daherkommen als übliche Centronics-Stecker (Abbildung \ref{fig:Alle IEEE 1284-Steckertypen im Vergleich}). 
+\newpage
 \begin{figure}[h!]
  \centering
  \includegraphics{./pics/ieee1284_types.jpg}
  \caption{Alle IEEE 1284-Steckertypen im Vergleich} 	
+  \label{fig:Alle IEEE 1284-Steckertypen im Vergleich}
 \end{figure}
-
-
-Üblicherweise wurden bei der häufig vorkommenden Verbindung zwischen PC und Drucker Kabel vom Typ AB eingesetzt. Dabei muss ein Mapping vom 25-poligen Typ A-Anschluss zum 36-poligen Typ-B-Anschluss vorgenommen werden (siehe Abbildung).  
+\noindent
+Üblicherweise wurden bei der häufig vorkommenden Verbindung zwischen PC und Drucker Kabel vom Typ AB eingesetzt. Dabei muss ein Mapping vom 25-poligen Typ A-Anschluss zum 36-poligen Typ-B-Anschluss vorgenommen werden (siehe Abbildung \ref{fig:Pinbelegung und -Verdrahtung bei üblichen Druckerkabeln}).  
 
 
 \begin{figure}[h!]
  \centering
  \includegraphics[scale=0.7]{./pics/ieee1284_pinbelegungAB.png}
  \caption{Pinbelegung und -Verdrahtung bei üblichen Druckerkabeln} 	
+ \label{fig:Pinbelegung und -Verdrahtung bei üblichen Druckerkabeln}
 \end{figure} 
 
- 
- Die folgende Tabelle beschreibt die  Belegung und Bedeutung der einzeln Pins bei einem üblichen Druckerkabel. 
+\noindent
+Die folgende Tabelle beschreibt die  Belegung und Bedeutung der einzeln Pins bei einem üblichen Druckerkabel. 
  \\ \\
  \begin{tabular}{|p{20mm}|p{20mm}|c|c|c|c|}
   \hline
@@ -131,7 +133,7 @@ Die Parallelportschnittstelle ist wesentlich durch den IEEE 1284-Standard geprä
 	18 - 25	&	19-30	&	Ground	&	Gnd	&	&             \\ \hline
  \end{tabular}
 
-
+\noindent \\
 Um die einzelnen Pins mit Signalen zu belegen, sind drei Ports für die Behandlung der LPT-Schnittstelle im Rechner vorgesehen.  \\\\
  \begin{tabular}{|c|c|c|c|}
  \hline
@@ -140,9 +142,9 @@ Um die einzelnen Pins mit Signalen zu belegen, sind drei Ports für die Behandlu
 279	&	379	&	3BD	&	Statusport \\  \hline 
 27A	&	37A	&	3BE	&	Steuerport \\  \hline 
  \end{tabular} 
- 
+\noindent \\\\
 In der Regel werden die Bereiche 278-27A und 378-37A verwendet. Der \textbf{Datenport} ist ein 8-Bit-Ausgagsport, der den Datenleitungen der parallelen Schnittstelle entspricht.  Der \textbf{Steuerport} setzt sich aus  Strobe, Auto-Feed, Reset, Select printer, IRC7 enable und Direction zusammen. 
-\\
+\\ \\
  \begin{tabular}{|c|c|c|c|}
   \hline
 Bit	&	Funktion	&	Pegel  \\ \hline
@@ -153,11 +155,11 @@ Bit	&	Funktion	&	Pegel  \\ \hline
 4	&	IRQ7 enable	&	1\\ \hline
 5	&	Direction	&	1\\ \hline
  \end{tabular} 
+\noindent \\\\
+Der \textbf{Statusport} ist ein 5 Bit-Port und setzt sich aus Error, Select Out, Paper Out, Acknowledge und Busy zusammen. \\
 
-Der \textbf{Statusport} ist ein 5 Bit-Port und setzt sich aus Error, Select Out, Paper Out, Acknowledge und Busy zusammen. 
-
-
- \begin{tabular}{|c|c|c|c|}
+\noindent
+\begin{tabular}{|c|c|c|c|}
   \hline
 Bit	&	Funktion	&	Pegel\\ \hline
 3	&	Fehler		&	0 	\\ \hline
@@ -166,14 +168,14 @@ Bit	&	Funktion	&	Pegel\\ \hline
 6	&	Acknowledge	&	0 \\ \hline
 7	&	Busy		&	0 \\ \hline
  \end{tabular} 
-
+\noindent \\\\
 Unter Beachtung der ggf. auftretenden Invertierungen können diese Ports direkt beschrieben werden.\\\\
 
 \subsection{Unterschiedliche Parallelporttypen und Modi}
 
 Viele Hersteller verbesserten in der Vergangenheit die Centronics-Schnittstelle um eigene Betriebsmodi, aber erst durch die Standardisierung unter IEEE1284 wurden auch einheitliche Betriebsmodi vereinbart. Der IEEE-Standard sieht natürlich einen Modus zur Kommunikation mit Druckern vor, welcher als \textbf{SPP} (Standard Parallel Port)-Modus bezeichnet wird. Dieser Modus ist kompatibel zum alten Centronics-Standard. Zusätzlich sind in IEEE1284 auch bidirektionale, schnellere Betriebsmodi beschrieben, die als \textbf{EPP} (Enhanced Parallel Port) und \textbf{ECP} (Extended Capability Port) bezeichnet werden. Die folgende Übersicht geht auf die Besonderheiten der jeweiligen Betriebsmodi ein: \\\\
 
-
+\noindent
 \textbf{SPP: Standard Parallel Port}
 \\
 Der SPP-Modus ist IBMs Art und Weise aus dem Jahre 1981 den Paralallelport zu nutzen. Die Daten können jeweils nur unidirektional über die Datenleitungen gesendet werden. Mit dem SPP sind folgende Betriebsarten (nach IEEE1284) möglich:
@@ -184,7 +186,7 @@ Der SPP-Modus ist IBMs Art und Weise aus dem Jahre 1981 den Paralallelport zu nu
       Zur bidrektionalen Übertragung können hier die 5 Statusleitungen verwendet werden. Dabei werden vier Statusleitungen zur Dateneingabe genutzt. Daraus resultiert eine 4-Bit-Parallelübertragung (4 Bit = Nibble) von der Peripherie zum PC und eine 8-Bit-Parallelübertragung vom PC zur Peripherie.
 \item Byte Mode:
       Bei späteren Ausführungen des SPP verwendeten einige Hersteller (wie IBM) acht bidrektionale Datenleitungen, wodurch eine 8 Bit Parallelübertragung ermöglicht wurde.\end{itemize}
-
+\noindent
 \textbf{EPP: Enhanced Parallel Port}
 \\
 EPP bei der parallelen Schnittstelle fand sich erstmals in Rechnern mit Intels 386SL-CPU. Durch EPP wird eine ``sehr schnelle'' parallele Schnittstelle bereitgestellt, die Datenraten von 500 KB/s bis zu 2MB/s ermöglicht, bleibt dennoch kompatibel zu alten SPP-Schnittstellen.
@@ -194,7 +196,7 @@ Die Leitungen der Schnittstelle sind jedoch anders spezifiziert als beim SPP.
 \item 4 Kontrolleitungen WRITE, DATA-STB, ADDR-STB, RESET (Ausgang)
 \item 5 Statusleitungen INTR, WAIT, 3 x USER-DEF (Eingang)
 \item 8 Adress-/Datenleitungen D0 - D7 (Ein+Aus) \end{itemize}
-
+\noindent
 \textbf{ECP: Extended Capability Port}
 \\
 ECP stellt eine Weiterentwicklung von EPP dar. Beim ECP-Modus werden die Daten lauflängenkodiert komprimiert vor dem Versenden. Die Kompression ist effizient in den Schnittstellenbausteinen der Hardware implementiert und besonders dann von Vorteil, wenn es gilt Bilddaten zu übertragen. Im Detail sieht ECP einen eigenen DMA-Kanal, eine FIFO-Pufferung für Hin- und Rückkanal und Datenkompression nach dem Runlenght-Encoding (RLE) Verfahren vor. Die Leitungen sind wie folgt spezifiziert:
@@ -217,7 +219,7 @@ aktuellen Modi (SPP, PS2, EPP, ECP) der Parallelschnittstelle (vgl. Abbildung \r
  \caption{Blockdiagramm des MosChip MCS9815}
  \label{fig:blockdiagramm_mcs9815}
 \end{figure}
-
+\noindent
 Einschränkungen des Chips ist die fehlende RLE-Kompression der Daten im ECP-Modus. Da dieser Modus aber
 in der Praxis selten verwendet wird, ist diese Einschränkungen zu vernachlässigen.
 Auch DMA (Direct-Memory-Access) unterstützt der Baustein nicht. Diese Informationen lassen sich dem Config-B Registers des
@@ -242,14 +244,15 @@ kontrolliert. Je nach Architektur und Plattform unterliegt dieses Lowlevel-Syste
 spezifische Treibermodule}
 \label{fig:parport_struktur}
 \end{figure}
-
+\newpage
+\noindent
 Der hardwarespezifische Treiber registriert einen \emph{Port}\footnote{Port ist hier die logische Parallelschnittstelle, nicht zu verwechseln
 mit dem I/O-Port (z.B. 0x378), der im PC für den Zugriff auf die Parallelporthardware verwendet werden kann} 
 im \verb|parport| Subsystem. 
 Dieses benachrichtigt alle registrierten Highlevel-Treiber (z.B. der Gerätetreiber \verb|lp| für Drucker) über den neuen Port. Der Lowlevel-Treiber stellt
 Funktionen für den Zugriff auf Basisfunktionen des Ports bereit (vgl. \cite{net:1}).
-
-Aufgabe dieser Hausarbeit ist es, einen Lowlevel-Treiber für einen speziellen Parallelport-Controller zu schreiben. Diese 
+\noindent
+Eine teilaufgabe dieser Hausarbeit ist, einen Lowlevel-Treiber für einen speziellen Parallelport-Controller zu schreiben. Diese 
 Funktionalität ist normalerweise im architekturspezifischen Modul \verb|parport_pc| integriert.
 
 \subsection{Aufbau des MCS9815-Treibers}
@@ -276,6 +279,8 @@ Abbildung \ref{portkonf_mcs9815}.
  \label{portkonf_mcs9815}
 \end{figure}
 
+\newpage 
+\noindent
 Sobald die entsprechenden I/O-Ports bestimmt wurden, werden sie vom Treiber mit der Kernelfunktion \verb|request_region| allokiert.
 Des weiteren füllt die \verb|init_parport| Funktion die Instanz der \verb|parport| Struktur mit sinnvollen Werten.
 Die Struktur \verb|parport| repräsentiert eine logische Parallelschnittstelle.
@@ -290,7 +295,7 @@ struct parport {
     int number;           /* parport index */
     struct parport_operations *ops;
 };\end{verbatim}
-
+\noindent
 Die Struktur enthält auch einen Verweis auf die wichtige Struktur \verb|parport_operations|.
 Wie auch die Struktur \verb|file_operations| bei einem Dateisystemtreiber enthält die 
 Struktur \verb|parport_operations| u.a. Funktionszeiger auf die vom Treiber unterstützten
@@ -328,7 +333,7 @@ struct parport_operations {
     size_t (*byte_read_data) (struct parport *port, void *buf, size_t len, int flags);
     struct module *owner;
 };\end{verbatim}
-
+\noindent
 Das generische parport Modul des Kernels verwendet diese Funktionszeiger um über das hardwarespezifische Modul mit 
 der tatsächlichen Hardware zu kommunizieren. Das Parport-Modul muss für den Betrieb geladen sein.
 Die Implementierung dieser Funktionen befinden sich in der Datei \verb|mcs9815_ops.c|. 
@@ -354,11 +359,11 @@ Ein solch wechselnder Inhalt wird über einen einfachen Zähler realisiert, der 
   timer.function = timer_strobe;
   add_timer(&timer);
 \end{verbatim}
-
+\noindent
 Nach der Timerinitialisierung werden zusätzliche Parameter festgelegt. Insbesondere ist der Funktionspointer auf die Methode von Bedeutung, die immer dann ausgeführt werden soll, wenn der festgelegte Zeitinterval von 500ms abgelaufen ist. In diesem Fall wird die methode \verb|timer_strobe| jeweils aufgerufen.
-
+\noindent \\
 Der Testtreiber verwendet das \verb|parport|-Subsystem und registriert sich an diesem als Treiber. Über vorhandene Methoden zum Schreiben auf den Parallelport und weitere Funktionalität wird die Kommunikation mit dem Parport-Subsystem realisiert. Um zunächst den Treiber am Subsystem zu registrieren, wird ein Struct vom Typ \verb|parport_driver| benötigt.
-
+\newpage
 \begin{verbatim}
 #include <parport.h>
 
@@ -369,14 +374,13 @@ struct parport_driver {
   struct parport_driver *next;
 };
 \end{verbatim}
-
+\noindent
 In diesem Struct werden der Name des Treibers, sowie Funktionenszeiger auf Methoden festgelegt, um die Abläufe zu steuern, die beim Aufsetzen/Entfernen des Treibers von Bedeutung sind. Mit den Informationen aus diesem Struct kann das Device beim Parport-Subsystem registriert werden durch bereitgestellte Methode:
 \begin{verbatim}
 int parport_register_driver(struct parport_driver *driver);
 \end{verbatim}
 
-
-Nach dem Registrieren des Treibers am Parport-Subsystem wird vom Kernel zu gegebener Zeit die Attach-Methode vom \verb|parport_driver| Struct aufgerufen. In der Attach-Methode wird dann das zu verwendende Gerät ermittelt. Ein Struct vom Typ \verb|pardevice| wird dann von der folgenden Methode zurückgegeben:
+\noindent Nach dem Registrieren des Treibers am Parport-Subsystem wird vom Kernel zu gegebener Zeit die Attach-Methode vom \verb|parport_driver| Struct aufgerufen. In der Attach-Methode wird dann das zu verwendende Gerät ermittelt. Ein Struct vom Typ \verb|pardevice| wird dann von der folgenden Methode zurückgegeben:
 
 \begin{verbatim}
 #include <parport.h>
@@ -389,25 +393,25 @@ struct pardevice *parport_register_device(struct parport *port,
   struct pt_regs *), 
   int flags, void *handle);
 \end{verbatim}
-
+\noindent
 Um den konkreten Betriebsmodus der parallelen Schnittstelle auszuhandeln, wird die Methode \verb|parport_negotiate| verwendet.
 
 \begin{verbatim}
 #include <parport.h>
 int parport_negotiate(struct parport *port, int mode);
 \end{verbatim}
-
+\noindent
 In diesem Fall könnte z.B. über die Konstante \verb|IEEE1284_MODE_COMPAT| der Kompatibilitätsmodus (SPP) eingestellt werden. 
-
-In der \verb|timer_strobe|-Methode wird jeweils auf den Parallelport geschrieben. Hierfür ist eigentlich die entsprechende Write-Methode verwendet.
+\noindent \\\\
+In der \verb|timer_strobe|-Methode wird jeweils auf den Parallelport geschrieben. Hierfür ist eigentlich die entsprechende Write-Methode vorgesehen:
 
 \begin{verbatim}
 #include <parport.h>
 
 ssize_t parport_write(struct parport *port, const void *buf, size_t len);
 \end{verbatim}
-
-Beim Testen des entworfenen Treibers trat bei der Verwendung dieser Methode jedoch ein Problem auf. Unter Verwendung des Standard-\verb|parport_pc|-Moduls als low-level-Treiber kam es beim Aufruf der write-Methode zu einem Systemabsturz. Interessanterweise konnte dieses Problem bei der Verwendung des eigenen low-level-Treibers nicht reproduziert werden. Mit dem (in dieser Projektarbeit entstandenden) mcs9815-Modul als Ersatz für das parport\_pc-Modul funktionierte der Aufruf der Write-Methode fehlerfrei. Damit aber auch das standard parport\_pc-Modul des Linux-Kernels mit dem High-Level-Treiber funktioniert, wurde ein anderer Schreibaufruf vewendet. Über die Parport-Operations des Device-Structs wird eine zusätzliche write-Methode zur Verfügung gestellt, die mit beiden Modulen funktioniert. Die entsprechende Passage ist im Code wie folgt hinterlegt
+\noindent
+Beim Testen des entworfenen Treibers trat bei der Verwendung dieser Methode jedoch ein Problem auf. Unter Verwendung des normalen \verb|parport_pc|-Moduls als low-level-Treiber kam es beim Aufruf der write-Methode zu einem Systemabsturz. Interessanterweise konnte dieses Problem bei der Verwendung des eigenen low-level-Treibers nicht reproduziert werden. Mit dem (in dieser Projektarbeit entstandenden) mcs9815-Modul als Ersatz für das parport\_pc-Modul funktionierte der Aufruf der Write-Methode fehlerfrei. Damit aber auch das standard parport\_pc-Modul des Linux-Kernels mit dem High-Level-Treiber funktioniert, wurde ein anderer Schreibaufruf vewendet. Über die Parport-Operations des Device-Structs wird eine zusätzliche write-Methode zur Verfügung gestellt, die mit beiden Modulen funktioniert. Die entsprechende Passage ist im Code wie folgt hinterlegt
 
 \begin{verbatim}
 // Writes the countvalue into our port
@@ -419,7 +423,7 @@ Beim Testen des entworfenen Treibers trat bei der Verwendung dieser Methode jedo
 // Additionally parport_write() only works with our mcs9815 
 // driver and freezes with the default parport_pc driver...
 \end{verbatim}
-
+\noindent
 Beim Entladen des Highlevel-Treiber-Moduls wird die \verb|parport_unregister_device| noch angewendet.
 
 \begin{verbatim}
@@ -428,8 +432,15 @@ void parport_unregister_device(struct pardevice *dev);
 
 \section{Fazit}
 
-Zum Status des Treibers ist zu sagen, dass er nur im SPP-Modus getestet wurde. Die EPP-Funktionen sind zwar vollständig implementiert, aber mangels Testgerät ungetestet.Die ECP-Funktionen konnten aus Zeitgründen nicht mehr vollständig implementiert und getestet werden.
+Hauptaugenmerk dieser Arbeit war die die Entwicklung eines Treibers für den MCS9815-Chipsatz unter Berücksichtigung des Parport-Subsystems. Der Chipsatz befindet sich auf einer PCI-Karte, so dass über den PCI-Bus die Möglichkeit bereitgestellt wird eine (zusätzliche) Parallelportschnittstelle dem System zur Verfügung zu stellen. Mit den erlernten Kenntnissen aus der Vorlesung und dem Praktikum konnte die Aufgabe aus sicht der Beteiligten dieser Arbeit gut umgesetzt werden, war aber dennoch stets fordernd. Es konnte ein guter Einblick in den Ablauf bei der Entwicklung eines richtigen Linux-Treibers gewonnen werden. Eine Erkenntnis dieser Arbeit ist sicherlich, dass klar wurde wie viel Herzblut und Arbeit die Linux-Treiberentwickler in das freie Betriebssystem stecken, um möglichst viel Hardware ansprechen zu können. Dadurch, dass die Spezifikation des Chipsatzes offenlag konnte aus Projektsicht die Arbeit so durchgeführt werden, wie auch tatsächliche Kernel-Treiberentwickler die Aufgabe gelöst hätten. Die Aufgabenstellung beim Entwickeln eines Treibers verfolgt also ein klares Muster. Zunächst muss man sich mit der Hardware auseinandersetzen, die man ansprechen möchte. Schnittstellenbeschreibungen und Spezifikationen sind hier vön Nöten. Für die geleistete Arbeit mussten Kenntnisse über den verwendeten Chipsatz und über die Verwendung des PCI-Bus und der parallelen Schnittstelle unter Linux gesammelt werden. Es überrascht, dass das sehr alte Parport-Subsystem unter Linux auch heute noch recht elegant von der Architekturseite her erscheint. Durch die Abstraktion zwischen Highlevel- und Lowlevel-Treibern, können Entwickler eine klare Trennung von der eigentlichen Gerätelogik und dem Ansprechen benötigter Ports vornehmen. Das Parport-Subsystem hilft dem Highlevel-Treiberentwickler dabei das eigene Gerät am System zu registrieren und es zu verwenden. Erst der Lowlevel-Treiber geht tatsächlich auf die Bitebene herunter und beschreibt entsprechende Ports. Das Parport-Subsystem delegiert dabei zwischen beiden Welten. Wenn klar ist, wie die Hardware anzusprechen ist, können sich Entwickler an die Entwicklung des eigenen Treibers machen und ggf. von entsprechenden Abstraktionsschichten, wie dem Parport-Subsystem, profitieren. Zum Status des entwickelten Treibers ist zu sagen, dass er nur im SPP-Modus getestet werden konnte. Die EPP-Funktionen sind zwar vollständig implementiert, aber mangels eines geeigneten Testgerätes konnte leider die Funktionalität nicht erschöpfend geprüft werden. Die ECP-Funktionen konnten nicht vollständig implementiert und getestet werden, da das Einbauen dieser zusätzlichen Funktionalität den Zeitrahmen der Arbeit zusätzlich gesprengt hätte. Die getätigte Projektarbeit hat jedoch idealerweise viele Bereiche der Vorlesung abgedeckt, in dem z.B. die Kommunikation mit dem PCI-Bus, Timer-Funktionalität oder die parallele Schnittstelle verwendet werden konnte. Die Projektarbeit rundet also die Inhalte und gewonnenen Erkenntnisse der Vorlesung in einer schönen Art und Weise ab. 
 
+
+\newpage
+\cleardoublepage
+\nocite{*}
+%{\footnotesize\singlespacing{{\bibliographystyle{jurabib}
+%{\footnotesize\singlespacing{{\bibliographystyle{jureco}
+%{\footnotesize\singlespacing{{\bibliographystyle{apacite}
 \bibliography{literatur}
 
 
