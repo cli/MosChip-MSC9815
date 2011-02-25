@@ -111,8 +111,8 @@ Die Parallelportschnittstelle ist wesentlich durch den IEEE 1284-Standard geprä
  \begin{tabular}{|p{20mm}|p{20mm}|c|c|c|c|}
   \hline
 	Pin (SUB-D-Type 25) & Pin (Centronics) & SPP Signal & Richtung Out & Register & Hardware\\ \hline
-	1 & 1	& 	Strobe					& 	Out		&	Control	&	Ja	\\ \hline
-	2 & 2	&	Data 0					&	Out		& 	Data		&     \\ \hline
+	1 & 	1	& 	Strobe				& 	Out		&	Control		&	Ja	\\ \hline
+	2 & 	2	&	Data 0				&	Out		& 	Data		&     \\ \hline
 	3 &	3	&	Data 1				&	Out		&	Data		&     \\ \hline
 	4 &	4	&	Data 2				&	Out		&	Data		&     \\ \hline
 	5 &	5	&	Data 3				&	Out		&	Data		&     \\ \hline
@@ -120,38 +120,90 @@ Die Parallelportschnittstelle ist wesentlich durch den IEEE 1284-Standard geprä
 	7 &	7	&	Data 5				&	Out		&	Data		&     \\ \hline
 	8 &	8	&	Data 6				&	Out		&	Data		&     \\ \hline
 	9 &	9	&	Data 7				&	Out		&	Data		&     \\ \hline
-	10 & 10	&	Ack					&	In		&	Status	&	    \\ \hline
-	11 & 11	&	Busy					&	In		&	Status	&	Ja  \\ \hline
-	12 & 12	&	Paper-Out/Paper-End	&	In		&	Status	&	    \\ \hline
-	13 & 13	&	Select				&	In		&	Status	&	    \\ \hline
-	14 & 14	&	Auto-Linefeed			&	Out		&	Control	&	Ja  \\ \hline
-	15 & 32	&	Error					&	In		&	Status	&	    \\ \hline
-	16 & 31	&	Reset				&	Out		&	Control	&	    \\ \hline
-	17 & 36	&	Select-Printer/Select-In	&	Out		&	Control	&	Ja  \\ \hline
-	18 - 25	&	19-30				&	Ground	&	Gnd	&	&             \\ \hline
+	10 & 	10	&	Ack				&	In		&	Status		&	    \\ \hline
+	11 & 	11	&	Busy				&	In		&	Status		&	Ja  \\ \hline
+	12 & 	12	&	Paper-Out/Paper-End		&	In		&	Status		&	    \\ \hline
+	13 & 	13	&	Select				&	In		&	Status		&	    \\ \hline
+	14 & 	14	&	Auto-Linefeed			&	Out		&	Control		&	Ja  \\ \hline
+	15 & 	32	&	Error				&	In		&	Status		&	    \\ \hline
+	16 & 	31	&	Reset				&	Out		&	Control		&	    \\ \hline
+	17 & 	36	&	Select-Printer/Select-In	&	Out		&	Control		&	Ja  \\ \hline
+	18 - 25	&	19-30	&	Ground	&	Gnd	&	&             \\ \hline
  \end{tabular}
 
 
-%Um die einzelnen Pins mit Signalen zu belegen, sind drei Speicherbereiche (Ports) für die Behandlung der LPT-Schnittstelle im Rechner vorgesehen.  \\\\
-% \begin{tabular}{|c|c|c|c|}
-% \hline
-%\multicolumn{3}{|l|}{Portadresse}	&	Funktion\\  \hline 
-%278	&	378	&	3BC	&	Datenport \\  \hline 
-%279	&	379	&	3BD	&	Statusport \\  \hline 
-%27A	&	37A	&	3BE	&	Steuerport \\  \hline 
-% \end{tabular} 
+Um die einzelnen Pins mit Signalen zu belegen, sind drei Ports für die Behandlung der LPT-Schnittstelle im Rechner vorgesehen.  \\\\
+ \begin{tabular}{|c|c|c|c|}
+ \hline
+\multicolumn{3}{|l|}{Portadresse}	&	Funktion\\  \hline 
+278	&	378	&	3BC	&	Datenport \\  \hline 
+279	&	379	&	3BD	&	Statusport \\  \hline 
+27A	&	37A	&	3BE	&	Steuerport \\  \hline 
+ \end{tabular} 
  
 In der Regel werden die Bereiche 278-27A und 378-37A verwendet. Der \textbf{Datenport} ist ein 8-Bit-Ausgagsport, der den Datenleitungen der parallelen Schnittstelle entspricht.  Der \textbf{Steuerport} setzt sich aus  Strobe, Auto-Feed, Reset, Select printer, IRC7 enable und Direction zusammen. 
+\\
  \begin{tabular}{|c|c|c|c|}
   \hline
-Bit	&	Funktion		&	Pegel  \\ \hline
+Bit	&	Funktion	&	Pegel  \\ \hline
 0	&	Strobe		&	0 \\ \hline
-1	&	Auto-Feed		&	1\\ \hline
+1	&	Auto-Feed	&	1\\ \hline
 2	&	Reset		&	0\\ \hline
 3	&	Select printer	&	1\\ \hline
 4	&	IRQ7 enable	&	1\\ \hline
 5	&	Direction	&	1\\ \hline
  \end{tabular} 
+
+Der \textbf{Statusport} ist ein 5 Bit-Port und setzt sich aus Error, Select Out, Paper Out, Acknowledge und Busy zusammen. 
+
+
+ \begin{tabular}{|c|c|c|c|}
+  \hline
+Bit	&	Funktion	&	Pegel\\ \hline
+3	&	Fehler		&	0 	\\ \hline
+4	&	Select out	&	1 \\ \hline
+5	&	Paper out	&	1 \\ \hline
+6	&	Acknowledge	&	0 \\ \hline
+7	&	Busy		&	0 \\ \hline
+ \end{tabular} 
+
+Unter Beachtung der ggf. auftretenden Invertierungen können diese Ports direkt beschrieben werden.\\\\
+
+\subsection{Unterschiedliche Parallelporttypen und Modi}
+
+Viele Hersteller verbesserten in der Vergangenheit die Centronics-Schnittstelle um eigene Betriebsmodi, aber erst durch die Standardisierung unter IEEE1284 wurden auch einheitliche Betriebsmodi vereinbart. Der IEEE-Standard sieht natürlich einen Modus zur Kommunikation mit Druckern vor, welcher als \textbf{SPP} (Standard Parallel Port)-Modus bezeichnet wird. Dieser Modus ist kompatibel zum alten Centronics-Standard. Zusätzlich sind in IEEE1284 auch bidirektionale, schnellere Betriebsmodi beschrieben, die als \textbf{EPP} (Enhanced Parallel Port) und \textbf{ECP} (Extended Capability Port) bezeichnet werden. Die folgende Übersicht geht auf die Besonderheiten der jeweiligen Betriebsmodi ein: \\\\
+
+
+\textbf{SPP: Standard Parallel Port}
+\\
+Der SPP-Modus ist IBMs Art und Weise aus dem Jahre 1981 den Paralallelport zu nutzen. Die Daten können jeweils nur unidirektional über die Datenleitungen gesendet werden. Mit dem SPP sind folgende Betriebsarten (nach IEEE1284) möglich:
+\begin{itemize}
+\item Compatible Mode:
+      8-Bit-Parallelübertragung. Erlaubt den Betrieb von reinen Ausgabegeräten wie z.B. Druckern oder Plottern, die für Rückmeldeantworten die Signalleitungen nutzen können. 
+\item Nibble Mode:
+      Zur bidrektionalen Übertragung können hier die 5 Statusleitungen verwendet werden. Dabei werden vier Statusleitungen zur Dateneingabe genutzt. Daraus resultiert eine 4-Bit-Parallelübertragung (4 Bit = Nibble) von der Peripherie zum PC und eine 8-Bit-Parallelübertragung vom PC zur Peripherie.
+\item Byte Mode:
+      Bei späteren Ausführungen des SPP verwendeten einige Hersteller (wie IBM) acht bidrektionale Datenleitungen, wodurch eine 8 Bit Parallelübertragung ermöglicht wurde.\end{itemize}
+
+\textbf{EPP: Enhanced Parallel Port}
+\\
+EPP bei der parallelen Schnittstelle fand sich erstmals in Rechnern mit Intels 386SL-CPU. Durch EPP wird eine ``sehr schnelle'' parallele Schnittstelle bereitgestellt, die Datenraten von 500 KB/s bis zu 2MB/s ermöglicht, bleibt dennoch kompatibel zu alten SPP-Schnittstellen.
+Die Leitungen der Schnittstelle sind jedoch anders spezifiziert als beim SPP.
+
+\begin{itemize}
+\item 4 Kontrolleitungen WRITE, DATA-STB, ADDR-STB, RESET (Ausgang)
+\item 5 Statusleitungen INTR, WAIT, 3 x USER-DEF (Eingang)
+\item 8 Adress-/Datenleitungen D0 - D7 (Ein+Aus) \end{itemize}
+
+\textbf{ECP: Extended Capability Port}
+\\
+ECP stellt eine Weiterentwicklung von EPP dar. Beim ECP-Modus werden die Daten lauflängenkodiert komprimiert vor dem Versenden. Die Kompression ist effizient in den Schnittstellenbausteinen der Hardware implementiert und besonders dann von Vorteil, wenn es gilt Bilddaten zu übertragen. Im Detail sieht ECP einen eigenen DMA-Kanal, eine FIFO-Pufferung für Hin- und Rückkanal und Datenkompression nach dem Runlenght-Encoding (RLE) Verfahren vor. Die Leitungen sind wie folgt spezifiziert:
+
+\begin{itemize}
+\item 4 Kontrolleitungen HOSTCLK, HOSTACK, 1284ACTIVE, REVERSEREQUEST (Ausgang)
+\item Statusleitungen PERIPHCLK, PERIPHACK, ACKREV, XFLAG, PERIRQ (Eingang)
+\item 8 Adress-/Datenleitungen D0 - D7 (Ein+Aus) \end{itemize}
+
 
 \section{Der MosChip MCS9815 Controller}
 
@@ -176,12 +228,12 @@ Die aufwändige Handshaking beim EPP-Modus kann die der MCS9815 in der Hardware 
 
 \subsection{Aufbau des parport-Subsystems}
 
-Da die Parallelportschnittstelle aus der Steinzeit der PC-Entwicklung stammt, ist die Unterstützung
-dafür im Linux-Kernel sehr gut. 
-Das \verb|parport| Subsystem besteht im Wesentlichen aus zwei Teilbereichen, einem abstrakteren Highlevel-System, das
-die IEEE 1284 Kommunikation beherrscht und einem Lowlevel-System, was den Hardwarezugriff auf die einzelnen Ports
-kontrolliert. Auf einem PC stellt das Modul \verb|parport_pc| den architekturspezifischen Teil bereit, das Modul \verb|parport| 
-den generischen Teil (vgl. \cite{net:1} und Abbildung \ref{fig:parport_struktur}).
+
+Da die Parallelportschnittstelle (umgangssprachlich) \textit{aus der Steinzeit} der PC-Entwicklung stammt, ist die Unterstützung
+dafür im Linux-Kernel sehr gut. Das \verb|parport|-Subsystem ist für das Ansprechen von Geräten über die parallele Schnittstelle im Linux-Kernel verantwortlich.
+Es besteht im Wesentlichen aus zwei Teilbereichen, einem abstrakteren Highlevel-System, das
+die IEEE 1284-Kommunikation beherrscht und einem Lowlevel-System, was den Hardwarezugriff auf die einzelnen Ports
+kontrolliert. Je nach Architektur und Plattform unterliegt dieses Lowlevel-System unterschiedlichen Implementierungen. Auf einem handelsüblichem IBM kompatiblen PC stellt das Modul \verb|parport_pc| den architekturspezifischen Teil bereit, das Modul \verb|parport| den generischen Teil (vgl. \cite{net:1} und Abbildung \ref{fig:parport_struktur}). 
 
 \begin{figure}[h!]
  \centering
@@ -290,11 +342,68 @@ abgeschaltet.
 
 \subsection{Highlevel Testtreiber}
 
+Nach dem Vorbild des \verb|lp|-Treibers unter Linux, welcher einen Highevel-Lineprinter für die parallele Schnittstelle darstellt, wurde ein Testtreiber entwickelt. Als Testgerät wurde an den LPT-Anschluss der PCI-Karte eine mit LEDs ausgestattete Platine angeschlossen, die durch jeweiliges An- und Ausschalten der einzelnen Lichter den Zustand des Datenregisters der parallelen Schnittstelle anzeigt. Das Ziel der Entwicklung war es nun einen Treiber zu entwickeln, der den Datenport regelmäßig mit Inhalt befüllt, welcher dann durch die LEDs der Platine entsprechend visualisiert dargestellt wird. 
+Ein solch wechselnder Inhalt wird über einen einfachen Zähler realisiert, der in einem geiwssen Zeitintervall den Zählerstand um eins inkrementiert. Der Linuxkernel bietet hierfür Timer-Funktionalität an, die durch das Einbinden von \verb|<linux/timer.h>| genutzt werden können. Durch \verb|init_timer(&timer)| wird der Timer initialisiert. Die Methode erwartet eine Referenz auf ein Struct vom Typ timer\_list. 
+\begin{verbatim}
+  static struct timer_list timer;
+  static int timer_interval = 500;
+  // Initialize timer
+  init_timer(&timer);
+  timer.expires = jiffies + timer_interval;
+  timer.data = 0;
+  timer.function = timer_strobe;
+  add_timer(&timer);
+\end{verbatim}
+
+Nach der Timerinitialisierung werden zusätzliche Parameter festgelegt. Insbesondere ist der Funktionspointer auf die Methode von Bedeutung, die immer dann ausgeführt werden soll, wenn der festgelegte Zeitinterval von 500ms abgelaufen ist. In diesem Fall wird die methode \verb|timer_strobe| jeweils aufgerufen.
+
+Der Testtreiber verwendet das \verb|parport|-Subsystem und registriert sich an diesem als Treiber. Über vorhandene Methoden zum Schreiben auf den Parallelport und weitere Funktionalität wird die Kommunikation mit dem Parport-Subsystem realisiert. Um zunächst sich am Subsystem als Treiber zu registrieren, wird ein Struct vom Typ \verb|parport_driver benötigt|.
+
+\begin{verbatim}
+#include <parport.h>
+
+struct parport_driver {
+  const char *name;
+  void (*attach) (struct parport *);
+  void (*detach) (struct parport *);
+  struct parport_driver *next;
+};
+\end{verbatim}
+
+In diesem Struct werden der Name des Treibers, sowie Funktionenszeiger auf Methoden festgelegt, um die Abläufe zu steuern, die beim Aufsetzen / bei Entfernen des Treibers von Bedeutung sind. Mit den Informationen aus diesem Struct kann das Device beim Parport-Subsystem registriert werden durch bereitgestellte Methode:
+\begin{verbatim}
+int parport_register_driver(struct parport_driver *driver);
+\end{verbatim}
+
+\begin{verbatim}
+#include <parport.h>
+
+struct pardevice *parport_register_device(struct parport *port, const char *name, int (*pf) (void *), void (*kf) (void *), void (*irq_func) (int, void *, struct pt_regs *), int flags, void *handle);
+\end{verbatim}
+
+\begin{verbatim}
+#include <parport.h>
+int parport_negotiate(struct parport *port, int mode);
+\end{verbatim}
+
+\begin{verbatim}
+// Writes the countvalue into our port
+  dev->port->ops->write_data(dev->port, countvalue);
+// Alternative:
+// written = parport_write(dev->port, &countvalue, 1);
+// dev->port->ops->write_data is  probably faster as parport_write 
+// has an additional call to compat_write_data() in between. 
+// Additionally parport_write() only works with our mcs9815 
+// driver and freezes with the default parport_pc driver...
+\end{verbatim}
+
+\begin{verbatim}
+void parport_unregister_device(struct pardevice *dev);
+\end{verbatim}
+
 \section{Fazit}
 
-Zum Status des Treibers ist zu sagen, dass er
-nur im SPP-Modus getestet wurde. Die EPP-Funktionen sind zwar vollständig implementiert, aber mangels Testgerät ungetestet.
-Die ECP-Funktionen konnten aus Zeitgründen nicht mehr vollständig implementiert und getestet werden.
+Zum Status des Treibers ist zu sagen, dass er nur im SPP-Modus getestet wurde. Die EPP-Funktionen sind zwar vollständig implementiert, aber mangels Testgerät ungetestet.Die ECP-Funktionen konnten aus Zeitgründen nicht mehr vollständig implementiert und getestet werden.
 
 \bibliography{literatur}
 
