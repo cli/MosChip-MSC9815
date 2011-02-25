@@ -5,7 +5,6 @@
 #include <asm/io.h>
 #include <linux/ioport.h>
 #include <linux/parport.h>
-#include "hldrv.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Nerdbuero Staff");
