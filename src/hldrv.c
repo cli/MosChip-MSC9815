@@ -5,6 +5,7 @@
 #include <asm/io.h>
 #include <linux/ioport.h>
 #include <linux/parport.h>
+#include "hldrv.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Nerdbuero Staff");
@@ -17,7 +18,8 @@ module_param(timer_interval, int, S_IRUGO);
 static unsigned char countvalue = 0;
 
 /** Increments the counter and writes it to parallelport 
- * */
+ * 
+*/
 static void timer_strobe(unsigned long data)
 {
 	printk(KERN_DEBUG "hldrv: Tick!\n");
@@ -41,8 +43,9 @@ static void timer_strobe(unsigned long data)
 /** Detach Function needed by parport_driver (Parport driver struct)
  * 
  * 	 This Function does literally nothing, but it's nice mentioning it!
-	 Here be dragons!
- * */
+ *   Here be dragons!
+ *
+*/
 static void nerdbuero_detach (struct parport *port)
 {
 	// No code here
@@ -57,7 +60,8 @@ static void nerdbuero_detach (struct parport *port)
  * 	
  * 
  * 
- * */
+ * 
+ */
 static void nerdbuero_attach (struct parport *port)
 {
 	if(dev == NULL)
@@ -105,7 +109,9 @@ static struct parport_driver nerdbuero_driver = {
 /**	Initialitation of the parport high level module.
  * 
  * Registers a parport driver by using parport_Register_driver
- * */
+ * 
+ * 
+ */
 static int __init parport_init(void)
 {
 	printk(KERN_INFO "hldrv module loading...\n");
@@ -125,7 +131,8 @@ static int __init parport_init(void)
  * Timer strobe will be deleted, the parport_driver is going 
  * to be unregistered.
  * 
- * */
+ * 
+ */
 static void __exit parport_exit(void)
 {
 	printk(KERN_INFO "hldrv module unloading...\n");
